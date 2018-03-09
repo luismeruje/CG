@@ -1,0 +1,92 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/main.cpp
+GLUT/glut.h
+-
+GL/glut.h
+-
+math.h
+-
+fstream
+-
+tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxml.h
+tinystr.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinystr.h
+tinyxmlparser.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxmlparser.cpp
+tinystr.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinystr.cpp
+tinyxml.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxml.cpp
+tinyxmlerror.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxmlerror.cpp
+string
+-
+vector
+-
+iostream
+-
+regex
+-
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinystr.cpp
+tinystr.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinystr.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinystr.h
+assert.h
+-
+string.h
+-
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxml.cpp
+ctype.h
+-
+sstream
+-
+iostream
+-
+tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxml.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxml.h
+ctype.h
+-
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+assert.h
+-
+string
+-
+iostream
+-
+sstream
+-
+tinystr.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinystr.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxmlerror.cpp
+tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxml.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxmlparser.cpp
+ctype.h
+-
+stddef.h
+-
+tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/Engine/code(2) 2/tinyxml.h
+windows.h
+-
+

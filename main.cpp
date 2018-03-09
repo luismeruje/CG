@@ -1,0 +1,205 @@
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <fstream>
+#include "tinyxml.h"
+#include "tinystr.h"
+#include "tinyxmlparser.cpp"
+#include "tinystr.cpp"
+#include "tinyxml.cpp"
+#include "tinyxmlerror.cpp"
+#include <string>
+#include <vector>
+#include <iostream>
+#include <regex>
+
+
+class Point
+{
+
+	double x, y, z;
+public:
+
+	Point(double x, double y, double z){
+		this->x = x;
+		this->y = y;
+		this->z = z;
+	}
+
+	double getX(){
+		return x;
+	}
+
+	double getY(){
+		return y;
+	}
+
+	double getZ(){
+		return z;
+	}
+};
+
+
+std::vector<std::string> ficheiros;
+std::vector<Point> pontos;
+
+
+void changeSize(int w, int h) {
+
+	// Prevent a divide by zero, when window is too short
+	// (you cant make a window with zero width).
+	if(h == 0)
+		h = 1;
+
+	// compute window's aspect ratio 
+	float ratio = w * 1.0 / h;
+
+	// Set the projection matrix as current
+	glMatrixMode(GL_PROJECTION);
+	// Load Identity Matrix
+	glLoadIdentity();
+	
+	// Set the viewport to be the entire window
+    glViewport(0, 0, w, h);
+
+	// Set perspective
+	gluPerspective(45.0f ,ratio, 1.0f ,1000.0f);
+
+	// return to the model view matrix mode
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void loadPointsToMemory(std::string fileName){
+	std::ifstream input(fileName.c_str());
+	std::string line;
+	std::regex numberReg("-?[0-9]+\\.?[0-9]*");
+	double x, y, z;
+	int num;
+	std::regex_iterator<std::string::iterator> end;
+	if(input!= NULL){
+		while(std::getline(input,line)){
+			num = 0;
+			std::regex_iterator<std::string::iterator> it ( line.begin(), line.end(), numberReg);
+			while(it != end){
+				switch(num){
+					case 0:
+						x = stod(it->str());
+						
+						break;
+					case 1:
+						y = stod(it->str());
+						
+						break;
+					case 2:
+						z = stod(it->str());
+						
+						break;
+					default:
+						break;
+				}
+				num++;
+				it++;
+			}
+			pontos.push_back(Point(x,y,z));
+		}
+	}
+	else
+		printf("Unable to open: %s\n",fileName.c_str());
+}
+
+void loadFiguresFromXML(const char * xmlFile){
+	TiXmlDocument doc(xmlFile);
+
+	bool loaded = doc.LoadFile();
+	if(loaded){
+		
+		for(TiXmlElement * e = doc.FirstChildElement("scene")->FirstChildElement("model"); e != NULL; e = e->NextSiblingElement("model")){
+			ficheiros.push_back(e->Attribute("file"));
+		}
+		for (int i = 0; i < ficheiros.size();i++){
+			loadPointsToMemory(ficheiros.at(i));
+		}
+	}
+	else{
+	 	printf("Failed to load %s \n.",xmlFile);
+	}
+	
+}
+
+
+
+void processKeys(unsigned char c, int xx, int yy) {
+
+
+
+}
+
+
+void processSpecialKeys(int key, int xx, int yy) {
+
+// put code to process special keys in here
+
+}
+
+void renderScene(void) {
+
+	// clear buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// set the camera
+	glLoadIdentity();
+	gluLookAt(5.0,5.0,5.0, 
+		      0.0,0.0,0.0,
+			  0.0f,1.0f,0.0f);
+
+	glPolygonMode(GL_FRONT,GL_LINE);
+
+	//Draw triangles
+	std::vector<Point>::iterator it;
+	for(it = pontos.begin();it != pontos.end(); it++){
+		glBegin(GL_TRIANGLES);
+			glVertex3f(it->getX(),it->getY(),it->getZ());
+			it++;
+			glVertex3f(it->getX(),it->getY(),it->getZ());
+			it++;
+			glVertex3f(it->getX(),it->getY(),it->getZ());
+		glEnd();
+	}
+
+	// End of frame
+	glutSwapBuffers();
+}
+
+int main(int argc, char **argv) {
+
+// init GLUT and the window
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA);
+	glutInitWindowPosition(100,100);
+	glutInitWindowSize(800,800);
+	glutCreateWindow("CG@DI-UM");
+		
+// Required callback registry 
+	glutDisplayFunc(renderScene);
+	glutReshapeFunc(changeSize);
+	
+// Callback registration for keyboard processing
+	glutKeyboardFunc(processKeys);
+	glutSpecialFunc(processSpecialKeys);
+
+//  OpenGL settings
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+//Load triangles from .3d files to be drawn
+//Verificar índice do argv
+	loadFiguresFromXML(argv[1]);
+
+// enter GLUT's main cycle
+	glutMainLoop();
+	
+	return 1;
+}
