@@ -16,7 +16,7 @@
 #include <vector>
 #include <iostream>
 #include <regex>
-
+#include <limits>
 
 class Point
 {
@@ -46,7 +46,9 @@ public:
 
 std::vector<std::string> ficheiros;
 std::vector<Point> pontos;
-
+float rotateHorizontal = 0;
+float rotateVertical = 0;
+int mode = GL_LINE;
 
 void changeSize(int w, int h) {
 
@@ -132,17 +134,50 @@ void loadFiguresFromXML(const char * xmlFile){
 
 
 
-void processKeys(unsigned char c, int xx, int yy) {
 
+void handleKeyboardSpecialEvent(int key_code,int x, int y){
+	switch(key_code){
+		case GLUT_KEY_LEFT:
+			rotateHorizontal += -0.1;
+			break;
+		case GLUT_KEY_RIGHT:
+			rotateHorizontal += 0.1;
+			break;
+		case GLUT_KEY_DOWN:
+			rotateVertical += -0.1;
+			if(rotateVertical <= -(M_PI / 2))
+				rotateVertical += 0.1;
+			break;
+		case GLUT_KEY_UP:
+			rotateVertical += 0.1;
+			if(rotateVertical >= M_PI / 2)
+				rotateVertical += -0.1;
 
-
+		default:
+			break;
+	}
+	if(rotateHorizontal > std::numeric_limits<float>::max() - 1 || rotateHorizontal < -std::numeric_limits<float>::max() + 1){
+		printf("%f,%f\n",std::numeric_limits<float>::max(),std::numeric_limits<float>::min());
+		rotateHorizontal = 0;
+	}
+	glutPostRedisplay();
 }
 
-
-void processSpecialKeys(int key, int xx, int yy) {
-
-// put code to process special keys in here
-
+void handleKeyboardEvent(unsigned char key, int x, int y){
+	switch(key){
+		case 'f':
+			mode = GL_FILL;
+			break;
+		case 'l':
+			mode = GL_LINE;
+			break;
+		case 'p':
+			mode = GL_POINT;
+			break;
+		default:
+			break;
+	}
+	glutPostRedisplay();
 }
 
 void renderScene(void) {
@@ -152,11 +187,11 @@ void renderScene(void) {
 
 	// set the camera
 	glLoadIdentity();
-	gluLookAt(5.0,5.0,5.0, 
+	gluLookAt(6.0 * cos(rotateVertical) * sin(rotateHorizontal),6.0 * sin(rotateVertical),6.0*cos(rotateVertical)*cos(rotateHorizontal), 
 		      0.0,0.0,0.0,
 			  0.0f,1.0f,0.0f);
 
-	glPolygonMode(GL_FRONT,GL_LINE);
+	glPolygonMode(GL_FRONT,mode);
 
 	//Draw triangles
 	std::vector<Point>::iterator it;
@@ -188,8 +223,8 @@ int main(int argc, char **argv) {
 	glutReshapeFunc(changeSize);
 	
 // Callback registration for keyboard processing
-	glutKeyboardFunc(processKeys);
-	glutSpecialFunc(processSpecialKeys);
+	glutKeyboardFunc(handleKeyboardEvent);
+	glutSpecialFunc(handleKeyboardSpecialEvent);
 
 //  OpenGL settings
 	glEnable(GL_DEPTH_TEST);
