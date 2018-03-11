@@ -139,9 +139,13 @@ void handleKeyboardSpecialEvent(int key_code,int x, int y){
 	switch(key_code){
 		case GLUT_KEY_LEFT:
 			rotateHorizontal += -0.1;
+			if(rotateHorizontal <= -(M_PI))
+				rotateHorizontal += 0.1;
 			break;
 		case GLUT_KEY_RIGHT:
 			rotateHorizontal += 0.1;
+			if(rotateHorizontal >= M_PI)
+				rotateHorizontal += -0.1;
 			break;
 		case GLUT_KEY_DOWN:
 			rotateVertical += -0.1;
@@ -155,10 +159,6 @@ void handleKeyboardSpecialEvent(int key_code,int x, int y){
 
 		default:
 			break;
-	}
-	if(rotateHorizontal > std::numeric_limits<float>::max() - 1 || rotateHorizontal < -std::numeric_limits<float>::max() + 1){
-		printf("%f,%f\n",std::numeric_limits<float>::max(),std::numeric_limits<float>::min());
-		rotateHorizontal = 0;
 	}
 	glutPostRedisplay();
 }
