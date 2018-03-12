@@ -15,8 +15,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <regex>
 #include <limits>
+#include <cstdio>
 
 class Point
 {
@@ -78,34 +78,11 @@ void changeSize(int w, int h) {
 void loadPointsToMemory(std::string fileName){
 	std::ifstream input(fileName.c_str());
 	std::string line;
-	std::regex numberReg("-?[0-9]+\\.?[0-9]*");
 	double x, y, z;
 	int num;
-	std::regex_iterator<std::string::iterator> end;
-	if(input!= NULL){
+	if(input){
 		while(std::getline(input,line)){
-			num = 0;
-			std::regex_iterator<std::string::iterator> it ( line.begin(), line.end(), numberReg);
-			while(it != end){
-				switch(num){
-					case 0:
-						x = stod(it->str());
-						
-						break;
-					case 1:
-						y = stod(it->str());
-						
-						break;
-					case 2:
-						z = stod(it->str());
-						
-						break;
-					default:
-						break;
-				}
-				num++;
-				it++;
-			}
+			std::sscanf(line.c_str(),"%lf;%lf;%lf",&x,&y,&z);
 			pontos.push_back(Point(x,y,z));
 		}
 	}
