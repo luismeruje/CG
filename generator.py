@@ -238,8 +238,10 @@ def main(argv):
 		elif argv[1] == "box":
 			if len(argv) == 7:
 				box(float(argv[2]),float(argv[3]),float(argv[4]),float(argv[5]),argv[6])
+			elif len(argv) == 6:
+				box(float(argv[2]),float(argv[3]),float(argv[4]),1,argv[5])
 			else:
-				print("ERROR: box should have 4 additional arguments and output file.\nArguments: x y z nrDivisions outputFile\n")
+				print("ERROR: box should have at least 3 additional arguments and output file.\nArguments: x y z nrDivisions(optional) outputFile\n")
 		elif argv[1] == "sphere":
 			if len(argv) == 6:
 				sphere(float(argv[2]),float(argv[3]),float(argv[4]),argv[5])
