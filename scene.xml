@@ -1,0 +1,93 @@
+<scene>
+	<group>
+		<!-- Sun -->
+		<group>
+			<scale X=15 Y=15 Z=15 />
+			<models>
+				<model file="sphere.3d" />
+			</models>	
+		</group>
+		<!-- Mercury -->
+		<group>
+			<scale X=1.5 Y=1.5 Z=1.5 />
+			<translate X=18 Y=0 Z=0 />
+			<rotate angle=150 axisX=0 axisY=1 axisZ=0 />
+			<models>
+				<model file="sphere.3d" />
+			</models>
+		</group>
+		<!-- Venus -->
+		<group>
+			<scale X=3.5 Y=3.5 Z=3.5 />
+			<translate X=25 Y=0 Z=0 />
+			<rotate angle=330 axisX=0 axisY=1 axisZ=0 />
+			<models>
+				<model file="sphere.3d" />
+			</models>
+		</group>
+		<!-- Earth -->
+		<group>
+			<scale X=4 Y=4 Z=4 />
+			<translate X=37 Y=0 Z=0 />
+			<rotate angle=120 axisX=0 axisY=1 axisZ=0 />
+			<models>
+				<model file="sphere.3d" />
+			</models>
+		</group>
+		<!-- Mars -->
+		<group>
+			<scale X=3 Y=3 Z=3 />
+			<translate X=46 Y=0 Z=0 />
+			<rotate angle=315 axisX=0 axisY=1 axisZ=0 />
+			<models>
+				<model file="sphere.3d" />
+			</models>
+		</group>
+		<!-- Jupiter -->
+		<group>
+			<scale X=8 Y=8 Z=8 />
+			<translate X=65 Y=0 Z=0 />
+			<rotate angle=240 axisX=0 axisY=1 axisZ=0 />
+			<models>
+				<model file="sphere.3d" />
+			</models>
+		</group>
+		<!-- Saturn -->
+		<group>
+			<group>
+				<scale X=6 Y=6 Z=6 />
+				<translate X=85 Y=0 Z=0 />
+				<rotate angle=180 axisX=0 axisY=1 axisZ=0 />
+				<models>
+					<model file="sphere.3d" />
+				</models>
+			</group>
+			<group>
+				<scale X=9 Y=0 Z=9 />
+				<translate X=85 Y=0 Z=0 />
+				<rotate angle=180 axisX=0 axisY=1 axisZ=0 />
+				<models>
+					<model file="sphere.3d" />
+				</models>
+			</group>
+		</group>
+		<!-- Uranus -->
+		<group>
+			<scale X=6 Y=6 Z=6 />
+			<translate X=103 Y=0 Z=0 />
+			<rotate angle=45 axisX=0 axisY=1 axisZ=0 />
+			<models>
+				<model file="sphere.3d" />
+			</models>
+		</group>
+		<!-- Neptune -->
+		<group>
+			<scale X=6 Y=6 Z=6 />
+			<translate X=121 Y=0 Z=0 />
+			<rotate angle=270 axisX=0 axisY=1 axisZ=0 />
+			<models>
+				<model file="sphere.3d" />
+			</models>
+		</group>
+	</group>
+</scene>
