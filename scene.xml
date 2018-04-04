@@ -55,7 +55,7 @@
 		<!-- Saturn -->
 		<group>
 			<group>
-				<scale X=6 Y=6 Z=6 />
+				<scale X=5 Y=5 Z=5 />
 				<translate X=85 Y=0 Z=0 />
 				<rotate angle=180 axisX=0 axisY=1 axisZ=0 />
 				<models>
@@ -63,11 +63,11 @@
 				</models>
 			</group>
 			<group>
-				<scale X=9 Y=0 Z=9 />
+				<scale X=9 Y=1 Z=9 />
 				<translate X=85 Y=0 Z=0 />
 				<rotate angle=180 axisX=0 axisY=1 axisZ=0 />
 				<models>
-					<model file="sphere.3d" />
+					<model file="disc.3d" />
 				</models>
 			</group>
 		</group>

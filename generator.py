@@ -220,7 +220,37 @@ def cone(radius, height, slices, stacks, fileName):
 	return;
 
 
+def disc(radiusIn, radiusOut, slices, fileName):
 
+	#Criar ficheiro
+	file = open(fileName,"w")
+	
+	# angle of slice
+	alfa = (2.0 * math.pi)/(slices)
+	
+	for i in range( 0,int(slices) ):
+		
+		#1st triangle UP
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusIn * math.cos( alfa * i ) , radiusIn * math.sin( alfa * i )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusOut * math.cos( alfa * i ) , radiusOut * math.sin( alfa * i )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusOut * math.cos( alfa * (i+1) ) , radiusOut * math.sin( alfa * (i+1) )))
+			
+		#1st triangle DOWN
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusIn * math.cos( alfa * i ) , radiusIn * math.sin( alfa * i )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusOut * math.cos( alfa * (i+1) ) , radiusOut * math.sin( alfa * (i+1) )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusOut * math.cos( alfa * i ) , radiusOut * math.sin( alfa * i )))
+
+		#2nd triangle UP
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusIn * math.cos( alfa * i ) , radiusIn * math.sin( alfa * i )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusOut * math.cos( alfa * (i+1) ) , radiusOut * math.sin( alfa * (i+1) )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusIn * math.cos( alfa * (i+1)) , radiusIn * math.sin( alfa * (i+1) )))
+
+		#2nd triangle UP
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusIn * math.cos( alfa * i ) , radiusIn * math.sin( alfa * i )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusIn * math.cos( alfa * (i+1)) , radiusIn * math.sin( alfa * (i+1) )))
+		file.write("{:.10f};0.0;{:.10f}\n".format( radiusOut * math.cos( alfa * (i+1) ) , radiusOut * math.sin( alfa * (i+1) )))
+
+	return;
 
 
 
@@ -252,6 +282,12 @@ def main(argv):
 				cone(float(argv[2]),float(argv[3]),float(argv[4]),float(argv[5]),argv[6])
 			else:
 				print("ERROR: cone should have 4 additional arguments and output file.\nArguments: radius height slices stacks outputFile\n")
+		elif argv[1] == 'disc':
+			if len(argv) == 6:
+				disc(float(argv[2]),float(argv[3]),float(argv[4]),argv[5])
+			else:
+				print("ERROR: cone should have 3 additional arguments and output file.\nArguments: radiusIn radiusOut slices  outputFile\n")
+			
 		else:
 			print("ERROR: Invalid shape\n")
 	else:
