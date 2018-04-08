@@ -79,7 +79,9 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ){
 	double x, y, z;
 	int num;
 
-	if ( input != NULL ) {
+	if ( !input ) 
+		printf("Unable to open: %s\n",fileName.c_str());	
+	else{
 		while ( getline( input,line ) ) { 
 			sscanf(line.c_str(),"%lf;%lf;%lf",&x,&y,&z);
 			
@@ -90,8 +92,7 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ){
 			points.push_back( Point( coord(0),coord(1),coord(2) ));
 		}
 	}
-	else
-		printf("Unable to open: %s\n",fileName.c_str());
+		
 }
 
 Matrix4d translateMatrix( TiXmlElement * elem, Matrix4d matrix ) {
