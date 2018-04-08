@@ -15,13 +15,15 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <regex>
+#include <stdio.h>
 #include <limits>
 #include "Eigen/Dense"
 
 using namespace Eigen;
 using namespace std;
 
+
+//WARNING: Princípios de encapsulamento não foram aplicados por ser um programa simples. São passados objetos entre funções e não cópias.
 class Point
 {
 	double x, y, z;
@@ -53,7 +55,7 @@ void changeSize(int w, int h) {
 	if(h == 0)
 		h = 1;
 
-	// compute window's aspect ratio 
+	// compute window'angleSin aspect ratio 
 	float ratio = w * 1.0 / h;
 
 	// Set the projection matrix as current
@@ -74,32 +76,12 @@ void changeSize(int w, int h) {
 void loadPointsToMemory( string fileName, Matrix4d matrix ){
 	ifstream input( fileName.c_str() );
 	string line;
-	regex numberReg("-?[0-9]+\\.?[0-9]*");
 	double x, y, z;
 	int num;
-	regex_iterator<string::iterator> end;
 
 	if ( input != NULL ) {
 		while ( getline( input,line ) ) { 
-			num = 0;
-			regex_iterator<string::iterator> it ( line.begin(), line.end(), numberReg);
-			while (it != end) {
-				switch (num) {
-					case 0:
-						x = stod(it->str());
-						break;
-					case 1:
-						y = stod(it->str());
-						break;
-					case 2:
-						z = stod(it->str());
-						break;
-					default:
-						break;
-				}
-				num++;
-				it++;
-			}
+			sscanf(line.c_str(),"%lf;%lf;%lf",&x,&y,&z);
 			
 			Vector4d coord;
 			coord << x, y, z, 1;
@@ -112,59 +94,59 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ){
 		printf("Unable to open: %s\n",fileName.c_str());
 }
 
-Matrix4d translateMatrix( TiXmlElement * elem, Matrix4d m ) {
+Matrix4d translateMatrix( TiXmlElement * elem, Matrix4d matrix ) {
 	double x, y, z;
-	Matrix4d t(4,4);
+	Matrix4d translationMatrix(4,4);
 
 	elem->Attribute( "X",&x );
 	elem->Attribute( "Y",&y );
 	elem->Attribute( "Z",&z );
 		
-	t <<	1, 0, 0, x,
+	translationMatrix <<	1, 0, 0, x,
 		0, 1, 0, y,
 		0, 0, 1, z,
 		0, 0, 0, 1;
 	
-	return t * m;	
+	return translationMatrix * matrix;	
 }
 
-Matrix4d rotateMatrix( TiXmlElement * elem, Matrix4d m ) {
-	double angle, x, y, z, c, s;
-	Matrix4d r(4,4);
+Matrix4d rotateMatrix( TiXmlElement * elem, Matrix4d matrix ) {
+	double angle, x, y, z, angleCosine, angleSin;
+	Matrix4d rotationMatrix(4,4);
 	
 	elem->Attribute( "angle",&angle );
 	elem->Attribute( "axisX",&x );
 	elem->Attribute( "axisY",&y );
 	elem->Attribute( "axisZ",&z );
 
-	c = cos( angle * (M_PI / 180) );
-	s = sin( angle * (M_PI / 180) );
+	angleCosine = cos( angle * (M_PI / 180) );
+	angleSin = sin( angle * (M_PI / 180) );
 
-	r <<	( x * x * (1 - c) + c ),	( x * y * (1 - c) - z * s ),	( x * z * (1 - c) + y * s ),	0,
-		( y * x * (1 - c) + z * s ),	( y * y * (1 - c) + c),		( y * z * (1 - c) - x * s ),	0,
-		( z * x * (1 - c) - y * s ),	( z * y * (1 - c) + x * s ),	( z * z * (1 - c) + c ),	0,
+	rotationMatrix <<	( x * x * (1 - angleCosine) + angleCosine ),	( x * y * (1 - angleCosine) - z * angleSin ),	( x * z * (1 - angleCosine) + y * angleSin ),	0,
+		( y * x * (1 - angleCosine) + z * angleSin ),	( y * y * (1 - angleCosine) + angleCosine),		( y * z * (1 - angleCosine) - x * angleSin ),	0,
+		( z * x * (1 - angleCosine) - y * angleSin ),	( z * y * (1 - angleCosine) + x * angleSin ),	( z * z * (1 - angleCosine) + angleCosine ),	0,
 		0,				0,				0,				1; 
 	
-	return r * m;	
+	return rotationMatrix * matrix;	
 }
 
-Matrix4d scaleMatrix( TiXmlElement * elem, Matrix4d m ) {
+Matrix4d scaleMatrix( TiXmlElement * elem, Matrix4d matrix ) {
 	double x, y, z;
-	Matrix4d s(4,4);
+	Matrix4d scalingMatrix(4,4);
 
 	elem->Attribute( "X",&x );
 	elem->Attribute( "Y",&y );
 	elem->Attribute( "Z",&z );
 
-	s <<	x, 0, 0, 0,
+	scalingMatrix <<	x, 0, 0, 0,
 		0, y, 0, 0,
 		0, 0, z, 0,
 		0, 0, 0, 1;
 	
-	return s * m;
+	return scalingMatrix * matrix;
 }
 
-void loadGroupFromXML( TiXmlElement * group, Matrix4d m ) {
+void loadGroupFromXML( TiXmlElement * group, Matrix4d matrix ) {
 	TiXmlElement * elem;
 	double angle, x, y, z;
 	int translateFlag = 0, rotateFlag = 0, scaleFlag = 0;
@@ -172,15 +154,15 @@ void loadGroupFromXML( TiXmlElement * group, Matrix4d m ) {
 	
 	for ( elem = group->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement() ) {
 		if ( strcmp( elem->Value(),"translate" ) == 0 && translateFlag == 0 ) {
-			m = translateMatrix( elem,m );
+			matrix = translateMatrix( elem,matrix );
 			translateFlag++;
 		} 
 		else if ( strcmp( elem->Value(),"rotate" ) == 0 && rotateFlag == 0 ) {
-			m = rotateMatrix( elem,m );
+			matrix = rotateMatrix( elem,matrix );
 			rotateFlag++;
 		}
 		else if ( strcmp( elem->Value(),"scale" ) == 0 && scaleFlag == 0 ) {
-			m = scaleMatrix( elem,m );
+			matrix = scaleMatrix( elem,matrix );
 			scaleFlag++;
 		}
 	}
@@ -189,23 +171,25 @@ void loadGroupFromXML( TiXmlElement * group, Matrix4d m ) {
 	elem = group->FirstChildElement("models");
 	if( elem != NULL ) {
 		for( elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")){
-			loadPointsToMemory( elem->Attribute( "file" ),m );
+			loadPointsToMemory( elem->Attribute( "file" ),matrix );
 		}	
 	}
 
 	// Other groups
 	for( elem = group->FirstChildElement("group"); elem != NULL; elem = elem->NextSiblingElement("group") )
-		loadGroupFromXML( elem,m );
+		loadGroupFromXML( elem,matrix );
+
 }
 
 void loadFiguresFromXML(const char * xmlFile){
 	TiXmlDocument doc(xmlFile);
-	Matrix4d m = Matrix4d::Identity(4,4);
+	Matrix4d matrix = Matrix4d::Identity(4,4);
 
 	bool loaded = doc.LoadFile();
-	if(loaded)
+	if(loaded){
 		for( TiXmlElement * group = doc.FirstChildElement("scene")->FirstChildElement("group"); group != NULL; group = group->NextSiblingElement("group") )
-			loadGroupFromXML( group,m );
+			loadGroupFromXML( group,matrix );
+	}
 	else
 	 	printf("Failed to load %s \n.",xmlFile);
 }
@@ -331,7 +315,7 @@ int main(int argc, char **argv) {
 	//Verificar índice do argv
 	loadFiguresFromXML(argv[1]);
 
-	// enter GLUT's main cycle
+	// enter GLUT'angleSin main cycle
 	glutMainLoop();
 	
 	return 1;
