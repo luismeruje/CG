@@ -1,15 +1,15 @@
 #include<stdio.h>
 
 
-
-#include <IL/il.h>
-
 #ifdef __APPLE__
 #include <GLUT/glut.h>
+#include "/usr/local/Cellar/devil/1.8.0_1/include/IL/il.h"
 #else
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <IL/il.h>
 #endif
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <fstream>
@@ -322,7 +322,9 @@ int main(int argc, char **argv) {
 	glutCreateWindow("CG@DI-UM");
 
     glEnableClientState(GL_VERTEX_ARRAY);
-    glewInit();
+    #ifndef __APPLE__	
+	glewInit();
+	#endif
     glGenBuffers(1, buffers);
     glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);
     glVertexPointer(3,GL_FLOAT,0,0);
