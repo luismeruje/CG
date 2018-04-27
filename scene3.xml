@@ -1,0 +1,24 @@
+<scene>	
+	<group>
+		<translate X=40 Y=0 Z=0 />
+		<models>
+			<model file="box.3d" />
+		</models>
+		<group>
+			<rotate angle=90 axisX=0 axisY=0 axisZ=1 />
+			<scale X=0.5 Y=0.5 Z=0.5 />
+			<models>
+				<model file="box.3d" />
+			</models>
+			<group>
+				<scale X=2 Y=2 Z=2 />
+				<translate X=0 Y=-60 Z=0 />
+				<models>
+					<model file="box.3d" />
+				</models>
+			</group>
+		</group>
+	</group>
+
+	
+</scene>
