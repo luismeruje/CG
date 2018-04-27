@@ -39,9 +39,6 @@ add_definitions(${OpenGL_DEFINITIONS})
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-file(COPY ${CMAKE_SOURCE_DIR}/relva.jpg DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/terreno.jpg DESTINATION ${CMAKE_BINARY_DIR})
-
 if (WIN32)
 	target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} glut32 glew32 DevIL)
 	file(COPY ${TOOLKITS_FOLDER}/glew/glew32.dll DESTINATION ${CMAKE_BINARY_DIR})
