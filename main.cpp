@@ -27,7 +27,7 @@
 
 using namespace Eigen;
 using namespace std;
-float vertexb[100000];
+float *vertexb;
 GLuint buffers[1];
 
 //WARNING: Princípios de encapsulamento não foram aplicados por ser um programa simples. São passados objetos entre funções e não cópias.
@@ -52,7 +52,7 @@ vector<Point> points;
 float rotateHorizontal = 0;
 float rotateVertical = 0;
 float color1 = 0, color2 = 0, color3 = 0;
-
+int pointc=0;
 int mode = GL_LINE;
 
 void changeSize(int w, int h) {
@@ -97,6 +97,7 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ){
 
 			coord = matrix * coord;
 			points.push_back( Point( coord(0),coord(1),coord(2) ));
+            pointc++;
 		}
 	}
 		
@@ -281,6 +282,7 @@ void renderScene(void) {
 
 	vector<Point>::iterator it;
     glColor3f(color1, color2, color3 );
+    vertexb= (float*)malloc(sizeof(float)*pointc*3);
     int pos = 0;
     for( it = points.begin() ; it != points.end() ; it++ ) {
         vertexb[pos++]= (it->getX());
@@ -304,8 +306,8 @@ void renderScene(void) {
 
 	}
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pos * 3, vertexb,GL_STATIC_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, pos);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pointc * 3, vertexb,GL_STATIC_DRAW);
+    glDrawArrays(GL_TRIANGLES, 0, pointc);
     // End of frame
 	glutSwapBuffers();
 }
