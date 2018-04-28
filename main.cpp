@@ -288,14 +288,7 @@ void renderScene(void) {
         vertexb[pos++]= (it->getX());
         vertexb[pos++]= (it->getY());
         vertexb[pos++]= (it->getZ());
-        it++;
-        vertexb[pos++]= (it->getX());
-        vertexb[pos++]= (it->getY());
-        vertexb[pos++]= (it->getZ());
-        it++;
-        vertexb[pos++]= (it->getX());
-        vertexb[pos++]= (it->getY());
-        vertexb[pos++]= (it->getZ());
+        
 		/**
 			glVertex3f(it->getX(),it->getY(),it->getZ());
 			it++;
@@ -303,13 +296,29 @@ void renderScene(void) {
 			it++;
 			glVertex3f(it->getX(),it->getY(),it->getZ());
 		 */
-
+        
 	}
 
+	glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);;
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pointc * 3, vertexb,GL_STATIC_DRAW);
+    glVertexPointer(3,GL_FLOAT,0,0);
     glDrawArrays(GL_TRIANGLES, 0, pointc);
     // End of frame
 	glutSwapBuffers();
+	free(vertexb);
+}
+
+void initGL(){
+	//  OpenGL settings
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	// Initializing components
+	glGenBuffers(1, buffers);
+
+
+	
 }
 
 int main(int argc, char **argv) {
@@ -322,33 +331,32 @@ int main(int argc, char **argv) {
 	glutInitWindowPosition(100,100);
 	glutInitWindowSize(800,800);
 	glutCreateWindow("CG@DI-UM");
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    #ifndef __APPLE__	
-	glewInit();
-	#endif
-    glGenBuffers(1, buffers);
-    glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);
-    glVertexPointer(3,GL_FLOAT,0,0);
-
-    // Required callback registry
+    
+	// Required callback registry
 	glutDisplayFunc(renderScene);
+	//glutIdleFunc(renderScene);
 	glutReshapeFunc(changeSize);
-	
+
 	// Callback registration for keyboard processing
 	glutKeyboardFunc(handleKeyboardEvent);
 	glutSpecialFunc(handleKeyboardSpecialEvent);
 
-	//  OpenGL settings
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+    #ifndef __APPLE__
+    //initialize glew	
+		glewInit();
+	#endif
+
+	//Initialize OpenGL
+	initGL();
 
 	//Load triangles from .3d files to be drawn
-	//Verificar índice do argv
 	loadFiguresFromXML(argv[1]);
 
-	// enter GLUT'angleSin main cycle
+
+	// enter GLUT's main cycle
 	glutMainLoop();
+
+	
 	
 	return 1;
 }
