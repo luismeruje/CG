@@ -128,15 +128,17 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ) {
 	}
 }
 
-void loadPointsToRotate(string fileName){
+void loadPointsToRotate(string fileName, Matrix4d matrix){
     ifstream input(fileName.c_str());
     string line;
+    vector <Point> rotatePoints;
     double x, y, z;
     int num;
-
+	printf("CheckPoint2-1\n");
     if (!input)
         printf("Unable to open: %s\n", fileName.c_str());
     else {
+    	printf("CheckPoint2-2\n");
         while (getline(input, line)) {
             sscanf(line.c_str(), "%lf;%lf;%lf", &x, &y, &z);
 
@@ -144,10 +146,14 @@ void loadPointsToRotate(string fileName){
             coord << x, y, z, 1;
 
             coord = matrix * coord;
-            points.push_back(Point(coord(0), coord(1), coord(2)));
-            pointc++;
+            rotatePoints.push_back(Point(coord(0), coord(1), coord(2)));
+
         }
+        printf("CheckPoint2-3\n");
+        Rotate rotateInstance = rotates.back();
+        rotateInstance.setModelPoints(rotatePoints);
     }
+
 }
 /*
 // given  global t, returns the point in the curve
@@ -284,8 +290,9 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		return scalingMatrix * matrix;
 	}
 
-	Matrix4d createNewRotate(TiXmlElement *elem) {
+	void createNewRotate(TiXmlElement *elem) {
 		double x, y, z;
+		vector<Point> rotatePoints;
 		int time;
         elem->Attribute("axisX", &x);
         elem->Attribute("axisY", &y);
@@ -294,7 +301,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
 		Point pivot = Point(x,y,z);
 
-		Rotate newRotate = Rotate(NULL,time,&pivot);
+		Rotate newRotate = Rotate(rotatePoints,time,&pivot);
 
 		rotates.push_back(newRotate);
 	}
@@ -327,12 +334,16 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		// Models
 		elem = group->FirstChildElement("models");
 		if (elem != NULL) {
-            if(specialFlag == 0)
+            if(specialFlag == 0){
                 for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
                     loadPointsToMemory(elem->Attribute("file"), matrix);
                 }
-            else if(specialFlag == 1)
-                loadPointsToRotate(elem->Attribute("file"));
+            }
+            else if(specialFlag == 1){
+            	printf("CheckPoint1\n");
+                loadPointsToRotate(elem->Attribute("file"),matrix);
+                printf("CheckPoint2\n");
+            }
 		}
 
 		// Other groups
