@@ -319,6 +319,8 @@ def writeTrianglesToFile(line1,line2,outFile):
 			outFile.write("{:.10f};{:.10f};{:.10f}\n".format(point1[0],point1[1],point1[2]))
 			outFile.write("{:.10f};{:.10f};{:.10f}\n".format(previousPoint2[0],previousPoint2[1],previousPoint2[2]))
 			outFile.write("{:.10f};{:.10f};{:.10f}\n".format(point2[0],point2[1],point2[2]))
+			previousPoint1 = p1
+			previousPoint2 = p2
 
 	return
 
