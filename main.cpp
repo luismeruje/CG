@@ -279,8 +279,16 @@ void renderScene(void) {
 			  0.0f,1.0f,0.0f);
 
 	glPolygonMode(GL_FRONT,mode);
+    glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);;
+    glDrawArrays(GL_TRIANGLES, 0, pointc);
 
-	vector<Point>::iterator it;
+    // End of frame
+	glutSwapBuffers();
+    //free(vertexb);
+}
+void prepareVBO(){
+
+    vector<Point>::iterator it;
     glColor3f(color1, color2, color3 );
     vertexb= (float*)malloc(sizeof(float)*pointc*3);
     int pos = 0;
@@ -288,35 +296,31 @@ void renderScene(void) {
         vertexb[pos++]= (it->getX());
         vertexb[pos++]= (it->getY());
         vertexb[pos++]= (it->getZ());
-        
-		/**
-			glVertex3f(it->getX(),it->getY(),it->getZ());
-			it++;
-			glVertex3f(it->getX(),it->getY(),it->getZ());
-			it++;
-			glVertex3f(it->getX(),it->getY(),it->getZ());
-		 */
-        
-	}
 
-	glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);;
+        /**
+            glVertex3f(it->getX(),it->getY(),it->getZ());
+            it++;
+            glVertex3f(it->getX(),it->getY(),it->getZ());
+            it++;
+            glVertex3f(it->getX(),it->getY(),it->getZ());
+         */
+
+    }
+    glGenBuffers(1, buffers);
+    glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);;
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pointc * 3, vertexb,GL_STATIC_DRAW);
     glVertexPointer(3,GL_FLOAT,0,0);
-    glDrawArrays(GL_TRIANGLES, 0, pointc);
-    // End of frame
-	glutSwapBuffers();
-	free(vertexb);
-}
 
+
+}
 void initGL(){
 	//  OpenGL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-	// Initializing components
-	glGenBuffers(1, buffers);
-
+	// Initializing component
+    prepareVBO();
 
 	
 }
@@ -346,12 +350,13 @@ int main(int argc, char **argv) {
 		glewInit();
 	#endif
 
-	//Initialize OpenGL
-	initGL();
+
 
 	//Load triangles from .3d files to be drawn
 	loadFiguresFromXML(argv[1]);
 
+    //Initialize OpenGL
+    initGL();
 
 	// enter GLUT's main cycle
 	glutMainLoop();
