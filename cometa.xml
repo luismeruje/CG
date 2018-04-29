@@ -1,0 +1,8 @@
+<scene>	
+	<group>
+		<scale X=15 Y=15 Z=15 />
+		<models>
+			<model file="cometa.3d" />
+		</models>	
+	</group>
+</scene>
