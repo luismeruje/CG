@@ -9,7 +9,7 @@
 #include <GL/glut.h>
 #include <IL/il.h>
 #endif
-
+#include <tr1/memory>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <fstream>
@@ -24,6 +24,8 @@
 #include <iostream>
 #include <limits>
 #include "Eigen/Dense"
+
+
 
 using namespace Eigen;
 using namespace std;
@@ -59,7 +61,7 @@ class Rotate
     int nrOfPoints;
 
 public:
-    Rotate(int time,shared_ptr<Point> pivot, Matrix4d matrix){
+    Rotate(int time,std::tr1::shared_ptr<Point> pivot, Matrix4d matrix){
         this->modelPoints = (float *)malloc(sizeof(float) * 3 * 200000);
         this->time = time;
         this->pivot = (float *)malloc(sizeof(float) * 3);
@@ -84,7 +86,7 @@ public:
 };
 
 vector<Point> points;
-vector< shared_ptr<Rotate> > rotates;
+vector< std::tr1::shared_ptr<Rotate> > rotates;
 int nrOfRotates = 0;
 
 //vector<Translate> translates;
@@ -144,7 +146,7 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ) {
 void loadPointsToRotate(string fileName){
     ifstream input(fileName.c_str());
     string line;
-    shared_ptr<Rotate> rotateInstance = rotates.back();
+    std::tr1::shared_ptr<Rotate> rotateInstance = rotates.back();
 
     float * rotatePoints = rotateInstance->getModelPoints();
     double x, y, z;
@@ -286,9 +288,9 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
         elem->Attribute("axisY", &y);
         elem->Attribute("axisZ", &z);
 		elem->Attribute("time", &time);
-		shared_ptr<Point> pivot (new Point(x,y,z));
+        std::tr1::shared_ptr<Point> pivot (new Point(x,y,z));
 
-		shared_ptr<Rotate> newRotate (new Rotate(time,pivot,matrix));
+        std::tr1::shared_ptr<Rotate> newRotate (new Rotate(time,pivot,matrix));
 		rotates.push_back(newRotate);
 		nrOfRotates++;
 	}
@@ -452,7 +454,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 	}
 
 	void drawDynamicRotates(){
-		vector< shared_ptr<Rotate> >::iterator it;
+		vector<std::tr1::shared_ptr<Rotate> >::iterator it;
 		float * points;
 		Matrix4d matrix;
 		int pos, time,nrOfPoints,r;
