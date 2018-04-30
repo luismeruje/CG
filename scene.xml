@@ -14,6 +14,13 @@
 				<model file="sphere.3d" />
 			</models>
 		</group>
+		<group>
+			<scale X=0.1 Y=0.1 Z=0.1 />
+			<translate X=60 Y=0 Z=20/>
+			<models>
+				<model file="cometa.3d"/>
+			</models>
+		</group>
 
 		<!-- Venus -->
 		<group>
