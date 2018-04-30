@@ -28,6 +28,7 @@
 using namespace Eigen;
 using namespace std;
 float *vertexb;
+float * pointsArray;
 
 GLuint buffers[1];
 
@@ -459,7 +460,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		int pos, time,nrOfPoints,r;
 		float * pivot;
 		float * point = (float*)malloc(sizeof(float) * 3);
-		float * pointsArray;
+		
 
 		for(r = 0,it = rotates.begin(); it != rotates.end(); it++,r++){
 			points = rotates.at(r)->getModelPoints();
@@ -477,7 +478,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 				pointsArray[pos++] = point[2];
 			}
 		
-			glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);
+			glBindBuffer(GL_ARRAY_BUFFER,buffers[1]);
 			printf("Check\n");
 			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * nrOfPoints, pointsArray, GL_STATIC_DRAW);
 			printf("Check2\n");
@@ -504,9 +505,9 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 				  0.0f, 1.0f, 0.0f);
 
 		
-		//glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-		//glVertexPointer(3, GL_FLOAT, 0, 0);
-		//glDrawArrays(GL_TRIANGLES, 0, pointc);
+		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+		glDrawArrays(GL_TRIANGLES, 0, pointc);
 
 		drawDynamicRotates();
 		//drawDynamicTranslates
@@ -548,7 +549,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glGenBuffers(1, buffers);
+		glGenBuffers(2, buffers);
 		glPolygonMode(GL_FRONT, mode);
 
 	}

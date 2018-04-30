@@ -6,8 +6,8 @@
         </group>
         <group>
                 <scale X=2 Y=2 Z=2 />
-                <translate X=-40 Y=0 Z=0 />
-                <rotate time=10 axisX=-40 axisY=0 axisZ=0 />
+		<translate X=1 Y=0 Z=0 />
+		<rotate time=10 axisX=0 axisY=1 axisZ=0 />
                 <models>
                         <model file="cone.3d" />
                 </models>
