@@ -50,30 +50,42 @@ public:
 
 class Rotate
 {
-    vector<Point> modelPoints;
+	//Pivot tbm precisa de smart pointer
+    float * modelPoints;
     int time;
-    Point * pivot;
+    float * pivot;
+    Matrix4d matrix;
+    int nrOfPoints;
 
 public:
-    Rotate(vector<Point> modelPoints,int time,Point * pivot){
-        this->modelPoints = modelPoints;
+    Rotate(int time,shared_ptr<Point> pivot, Matrix4d matrix){
+        this->modelPoints = (float *)malloc(sizeof(float) * 3 * 200000);
         this->time = time;
-        this->pivot = pivot;
+        this->pivot = (float *)malloc(sizeof(float) * 3);
+        this->pivot[0] = pivot->getX();
+        this->pivot[1] = pivot->getY();
+        this->pivot[2] = pivot->getZ();
+        this->matrix = matrix;
+        this->nrOfPoints = 0;
     }
-
-    vector<Point> getModelPoints(){return modelPoints;}
+    
+    float * getModelPoints(){return modelPoints;}
 	int getTime(){return time;}
-	Point * getPivot(){return pivot;}
+	float*  getPivot(){return pivot;}
+	Matrix4d getMatrix(){return matrix;}
 
-
-	//setModelPoints
-	void setModelPoints(vector<Point> modelPoints){
-		this->modelPoints = modelPoints;
+	void incrementNrOfPoints(){
+		nrOfPoints++;
 	}
+
+	int getNrOfPoints(){return nrOfPoints;}
+
 };
 
 vector<Point> points;
-vector<Rotate> rotates;
+vector< shared_ptr<Rotate> > rotates;
+int nrOfRotates = 0;
+
 //vector<Translate> translates;
 float rotateHorizontal = 0;
 float rotateVertical = 0;
@@ -97,7 +109,7 @@ void changeSize(int w, int h) {
 	glLoadIdentity();
 	
 	// Set the viewport to be the entire window
-    	glViewport(0, 0, w, h);
+    glViewport(0, 0, w, h);
 
 	// Set perspective
 	gluPerspective(45.0f ,ratio, 1.0f ,1000.0f);
@@ -131,23 +143,26 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ) {
 void loadPointsToRotate(string fileName){
     ifstream input(fileName.c_str());
     string line;
+    shared_ptr<Rotate> rotateInstance = rotates.back();
+    
+    float * rotatePoints = rotateInstance->getModelPoints();
     double x, y, z;
     int num;
+    int pos = 0;
 
     if (!input)
         printf("Unable to open: %s\n", fileName.c_str());
     else {
         while (getline(input, line)) {
             sscanf(line.c_str(), "%lf;%lf;%lf", &x, &y, &z);
-
-            Vector4d coord;
-            coord << x, y, z, 1;
-
-            coord = matrix * coord;
-            points.push_back(Point(coord(0), coord(1), coord(2)));
-            pointc++;
+            rotatePoints[pos++] = x;
+            rotatePoints[pos++] = y;
+            rotatePoints[pos++] = z;
+            rotateInstance->incrementNrOfPoints();
         }
+        printf("Nr: %d\n",rotateInstance->getNrOfPoints());
     }
+
 }
 /*
 // given  global t, returns the point in the curve
@@ -223,28 +238,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
     elem->Attribute( "Z",&z );
 }
 */
-	Matrix4d rotateMatrixwtime(TiXmlElement *elem, Matrix4d matrix, int time) {
-		double angle, x, y, z, angleCosine, angleSin;
-		Matrix4d rotationMatrix(4, 4);
-		angle = glutGet(GLUT_ELAPSED_TIME) % time;
-		elem->Attribute("axisX", &x);
-		elem->Attribute("axisY", &y);
-		elem->Attribute("axisZ", &z);
-
-		angleCosine = cos(angle * (M_PI / 180));
-		angleSin = sin(angle * (M_PI / 180));
-
-		rotationMatrix << (x * x * (1 - angleCosine) + angleCosine), (x * y * (1 - angleCosine) - z * angleSin), (
-				x * z * (1 - angleCosine) + y * angleSin), 0,
-				(y * x * (1 - angleCosine) + z * angleSin), (y * y * (1 - angleCosine) + angleCosine), (
-				y * z * (1 - angleCosine) - x * angleSin), 0,
-				(z * x * (1 - angleCosine) - y * angleSin), (z * y * (1 - angleCosine) + x * angleSin), (
-				z * z * (1 - angleCosine) + angleCosine), 0,
-				0, 0, 0, 1;
-
-		return rotationMatrix * matrix;
-
-	}
+	
 	Matrix4d rotateMatrix(TiXmlElement *elem, Matrix4d matrix) {
 		double angle, x, y, z, angleCosine, angleSin;
 		Matrix4d rotationMatrix(4, 4);
@@ -284,19 +278,21 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		return scalingMatrix * matrix;
 	}
 
-	Matrix4d createNewRotate(TiXmlElement *elem) {
+	void createNewRotate(TiXmlElement *elem, Matrix4d matrix) {
 		double x, y, z;
 		int time;
         elem->Attribute("axisX", &x);
         elem->Attribute("axisY", &y);
         elem->Attribute("axisZ", &z);
 		elem->Attribute("time", &time);
+		printf("teste\n");
+		shared_ptr<Point> pivot (new Point(x,y,z));
 
-		Point pivot = Point(x,y,z);
-
-		Rotate newRotate = Rotate(NULL,time,&pivot);
-
+		shared_ptr<Rotate> newRotate (new Rotate(time,pivot,matrix));
+		printf("teste2\n");
 		rotates.push_back(newRotate);
+		printf("teste3\n");
+		nrOfRotates++;
 	}
 
 	void loadGroupFromXML(TiXmlElement *group, Matrix4d matrix) {
@@ -312,7 +308,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 			} else if (strcmp(elem->Value(), "rotate") == 0 && rotateFlag == 0) {
                 const char *isSpecialRotate = elem->Attribute("time");
 				if (isSpecialRotate) {
-                    createNewRotate(elem);
+                    createNewRotate(elem,matrix);
                     specialFlag=1;
                 }
 				else
@@ -327,12 +323,17 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		// Models
 		elem = group->FirstChildElement("models");
 		if (elem != NULL) {
-            if(specialFlag == 0)
+            if(specialFlag == 0){
                 for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
                     loadPointsToMemory(elem->Attribute("file"), matrix);
                 }
-            else if(specialFlag == 1)
-                loadPointsToRotate(elem->Attribute("file"));
+            }
+            else if(specialFlag == 1){
+            	for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
+                	loadPointsToRotate(elem->Attribute("file"));
+                }
+                specialFlag = 0;
+            }
 		}
 
 		// Other groups
@@ -417,6 +418,78 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		glutPostRedisplay();
 	}
 
+	Matrix4d rotateMatrixwtime(double x, double y, double z, Matrix4d matrix, int time) {
+		double angle, angleCosine, angleSin;
+		Matrix4d rotationMatrix(4, 4);
+
+		angle = glutGet(GLUT_ELAPSED_TIME) % time;
+
+		angleCosine = cos(angle * (M_PI / 180));
+		angleSin = sin(angle * (M_PI / 180));
+
+		rotationMatrix << (x * x * (1 - angleCosine) + angleCosine), (x * y * (1 - angleCosine) - z * angleSin), (
+				x * z * (1 - angleCosine) + y * angleSin), 0,
+				(y * x * (1 - angleCosine) + z * angleSin), (y * y * (1 - angleCosine) + angleCosine), (
+				y * z * (1 - angleCosine) - x * angleSin), 0,
+				(z * x * (1 - angleCosine) - y * angleSin), (z * y * (1 - angleCosine) + x * angleSin), (
+				z * z * (1 - angleCosine) + angleCosine), 0,
+				0, 0, 0, 1;
+
+		return rotationMatrix * matrix;
+
+	}
+
+	void getRotatePointPosition(double x, double y, double z, int time, Matrix4d matrixBeforeRotation, float * pivot,float* actualPoint){
+		Vector4d coord;
+		Matrix4d matrix = rotateMatrixwtime(pivot[0],pivot[1],pivot[2],matrixBeforeRotation,time);
+
+        coord << x, y, z, 1;
+
+        coord = matrix * coord;
+        actualPoint[0] = coord(0);
+        actualPoint[1] = coord(1);
+        actualPoint[2] = coord(2);
+
+	}
+
+	void drawDynamicRotates(){
+		vector< shared_ptr<Rotate> >::iterator it;
+		float * points;
+		Matrix4d matrix;
+		int pos, time,nrOfPoints,r;
+		float * pivot;
+		float * point = (float*)malloc(sizeof(float) * 3);
+		float * pointsArray;
+
+		for(r = 0,it = rotates.begin(); it != rotates.end(); it++,r++){
+			points = rotates.at(r)->getModelPoints();
+			pointsArray = (float*)malloc(sizeof(float) * 3 * nrOfPoints);
+			time = rotates.at(r)->getTime();
+			matrix = rotates.at(r)->getMatrix();
+			pivot = rotates.at(r)->getPivot();
+			nrOfPoints = rotates.at(r)->getNrOfPoints();
+			for(int i = 0; i < nrOfPoints; i+=1){
+				printf("Before Point: %lf,%lf,%lf\n",points[i*3],points[i * 3+1],points[i * 3+2]);
+				getRotatePointPosition(points[i*3],points[i * 3+1],points[i * 3+2],time,matrix,pivot,point);
+				printf("Final Point: %lf,%lf,%lf\n",point[0],point[1],point[2]);
+				pointsArray[pos++] = point[0];
+				pointsArray[pos++] = point[1];
+				pointsArray[pos++] = point[2];
+			}
+		
+			glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);
+			printf("Check\n");
+			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * nrOfPoints, pointsArray, GL_STATIC_DRAW);
+			printf("Check2\n");
+			glVertexPointer(3, GL_FLOAT, 0, 0);
+			printf("Check3\n");
+			glDrawArrays(GL_TRIANGLES,0,nrOfPoints);
+			printf("Check4\n");
+			
+		}
+	}
+
+
 	void renderScene(void) {
 
 		// clear buffers
@@ -430,15 +503,21 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 
-		glPolygonMode(GL_FRONT, mode);
-		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-		glDrawArrays(GL_TRIANGLES, 0, pointc);
+		
+		//glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+		//glVertexPointer(3, GL_FLOAT, 0, 0);
+		//glDrawArrays(GL_TRIANGLES, 0, pointc);
+
+		drawDynamicRotates();
+		//drawDynamicTranslates
 
 		// End of frame
 		glutSwapBuffers();
-		//free(vertexb);
+		printf("Check5\n");
+		
+		
 	}
-	void prepareVBO() {
+	void fillConstantVBO() {
 
 		vector<Point>::iterator it;
 		glColor3f(color1, color2, color3);
@@ -458,11 +537,10 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
              */
 
 		}
-		glGenBuffers(1, buffers);
+		
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);;
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pointc * 3, vertexb, GL_STATIC_DRAW);
-		glVertexPointer(3, GL_FLOAT, 0, 0);
-
+		//free(vertexb);
 
 	}
 	void initGL() {
@@ -470,10 +548,8 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glEnableClientState(GL_VERTEX_ARRAY);
-
-		// Initializing component
-		prepareVBO();
-
+		glGenBuffers(1, buffers);
+		glPolygonMode(GL_FRONT, mode);
 
 	}
 
@@ -509,6 +585,9 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
 		//Initialize OpenGL
 		initGL();
+
+		//Fill buffer[0] with static points
+		fillConstantVBO();
 
 		// enter GLUT's main cycle
 		glutMainLoop();
