@@ -260,7 +260,7 @@ def disc(radiusIn, radiusOut, slices, fileName):
 def bezier(inFileName,tesselation,outFileName):
 	patchesReferencePoints = list()
 	points = list()
-	referencePoints = list()
+
 
 	outFile = open(outFileName,"w")
 

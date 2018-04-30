@@ -164,7 +164,6 @@ void loadPointsToRotate(string fileName){
             rotatePoints[pos++] = z;
             rotateInstance->incrementNrOfPoints();
         }
-        printf("Nr: %d\n",rotateInstance->getNrOfPoints());
     }
 
 }
