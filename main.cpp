@@ -55,7 +55,6 @@ public:
 
 class Rotate
 {
-	//Pivot tbm precisa de smart pointer
     float * modelPoints;
     int time;
     float * pivot;

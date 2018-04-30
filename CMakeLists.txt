@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 # Project Name
 PROJECT(Engine)
-
 if (NOT APPLE)
 	if (WIN32)
 		set(TOOLKITS_FOLDER "" CACHE PATH "Path to toolkits folder")
