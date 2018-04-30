@@ -180,6 +180,16 @@
 				</models>
 			</group>
 		</group>
+		<!-- Comet -->
+		<group>
+		     <scale X=0.2 Y=0.2 Z=0.2 />
+		     <translate X=55 Y=0 Z=0 />
+		     <rotate time=20 axisX=0 axisY=1 axisZ=0 />
+		     <models>
+           		 <model file="cometa.3d" />
+		     </models>
+		</group>
+
 		<!-- Neptune -->
 		<group>
 			<scale X=0.4 Y=0.4 Z=0.4 />

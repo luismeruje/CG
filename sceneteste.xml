@@ -5,11 +5,11 @@
                 </models>
         </group>
         <group>
-                <scale X=2 Y=2 Z=2 />
+                <scale X=20 Y=20 Z=20 />
 		<translate X=1 Y=0 Z=0 />
 		<rotate time=10 axisX=0 axisY=1 axisZ=0 />
                 <models>
-                        <model file="cone.3d" />
+                        <model file="teapot.3d" />
                 </models>
         </group>
         <group>
