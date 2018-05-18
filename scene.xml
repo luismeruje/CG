@@ -14,7 +14,7 @@
 			<translate X=18 Y=0 Z=0 />
 			<rotate angle=150 axisX=0 axisY=1 axisZ=0 />
 			<models>
-				<model file="sphere.3d" />
+				<model file="sphere.3d" diffR=0.8 diffG=0.2 diffB=0.2 />
 			</models>
 		</group>
 

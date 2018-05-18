@@ -84,8 +84,64 @@ public:
 
 };
 
+class DrawSegment
+{
+	float diffR, diffG, diffB;
+	float ambR, ambG, ambB;
+	float specR, specG, specB;
+	float emR, emG, emB;
+	int beginIndex;
+	int nrVertex;
+
+public:
+	DrawSegment(int beginIndex, int nrVertex){
+		//Almost white
+		this->ambR=0.2; this->ambG=0.2; this->ambB=0.2;
+		
+		//Almost black
+		this->diffR=0.8; this->diffG=0.8; this->diffB=0.8;
+
+		//White
+		this->specR=0; this->specG=0; this->specB=0;
+
+		//White
+		this->emR=0; this->emG=0; this->emB=0;
+
+		this->beginIndex = beginIndex;
+		this->nrVertex = nrVertex;
+	}
+
+	void setAmbR(float ambR){this->ambR = ambR;}
+	void setAmbG(float ambG){this->ambG = ambG;}
+	void setAmbB(float ambB){this->ambB = ambB;}
+	void setDiffR(float diffR){this->diffR = diffR;}
+	void setDiffG(float diffG){this->diffG = diffG;}
+	void setDiffB(float diffB){this->diffB = diffB;}
+	void setSpecR(float specR){this->specR = specR;}
+	void setSpecG(float specG){this->specG = specG;}
+	void setSpecB(float specB){this->specB = specB;}
+	void setEmR(float emR){this->emR = emR;}
+	void setEmG(float emG){this->emG = emG;}
+	void setEmB(float emB){this->emB = emB;}
+	float getAmbR() {return ambR;}
+	float getAmbG() {return ambG;}
+	float getAmbB() {return ambB;}
+	float getDiffR(){return diffR;}
+	float getDiffG(){return diffG;}
+	float getDiffB(){return diffB;}
+	float getSpecR(){return specR;}
+	float getSpecG(){return specG;}
+	float getSpecB(){return specB;}
+	float getEmR(){return emR;}
+	float getEmG(){return emG;}
+	float getEmB(){return emB;}
+	float getBeginIndex(){return beginIndex;}
+	float getNrVertex(){return nrVertex;}
+};
+
 vector<Point> points;
 vector< shared_ptr<Rotate> > rotates;
+vector<DrawSegment> segments;
 int nrOfRotates = 0;
 
 //vector<Translate> translates;
@@ -119,7 +175,7 @@ void changeSize(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void loadPointsToMemory( string fileName, Matrix4d matrix ) {
+int loadPointsToMemory( string fileName, Matrix4d matrix ) {
 	ifstream input(fileName.c_str());
 	string line;
 	double x, y, z;
@@ -128,6 +184,7 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ) {
 	if (!input)
 		printf("Unable to open: %s\n", fileName.c_str());
 	else {
+		int beginIndex = points.size(),nrVertex;
 		while (getline(input, line)) {
 			sscanf(line.c_str(), "%lf;%lf;%lf", &x, &y, &z);
 
@@ -137,7 +194,11 @@ void loadPointsToMemory( string fileName, Matrix4d matrix ) {
 			coord = matrix * coord;
 			points.push_back(Point(coord(0), coord(1), coord(2)));
 		}
+		nrVertex = points.size() - beginIndex;
+		return nrVertex;
+
 	}
+	return 0;
 }
 
 void loadPointsToRotate(string fileName){
@@ -291,6 +352,49 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		nrOfRotates++;
 	}
 
+	void setDrawSegmentValues(DrawSegment * segment,TiXmlElement * model){
+		double paramValue;
+		if(model->Attribute("diffR",&paramValue)){
+			segment->setDiffR((float)paramValue);
+		}
+		if(model->Attribute("diffG",&paramValue)){
+			segment->setDiffG((float)paramValue);
+		}
+		if(model->Attribute("diffB",&paramValue)){
+			segment->setDiffB((float)paramValue);
+		}
+
+		if(model->Attribute("ambR",&paramValue)){
+			segment->setAmbR((float)paramValue);
+		}
+		if(model->Attribute("ambG",&paramValue)){
+			segment->setAmbG((float)paramValue);
+		}
+		if(model->Attribute("ambB",&paramValue)){
+			segment->setAmbB((float)paramValue);
+		}
+
+		if(model->Attribute("specR",&paramValue)){
+			segment->setSpecR((float)paramValue);
+		}
+		if(model->Attribute("specG",&paramValue)){
+			segment->setSpecG((float)paramValue);
+		}
+		if(model->Attribute("specB",&paramValue)){
+			segment->setSpecB((float)paramValue);
+		}
+
+		if(model->Attribute("emR",&paramValue)){
+			segment->setEmR((float)paramValue);
+		}
+		if(model->Attribute("emG",&paramValue)){
+			segment->setEmG((float)paramValue);
+		}
+		if(model->Attribute("emB",&paramValue)){
+			segment->setEmB((float)paramValue);
+		}
+	}
+
 	void loadGroupFromXML(TiXmlElement *group, Matrix4d matrix) {
 		TiXmlElement *elem;
 		double angle, x, y, z;
@@ -321,7 +425,12 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		if (elem != NULL) {
             if(specialFlag == 0){
                 for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
-                    loadPointsToMemory(elem->Attribute("file"), matrix);
+                	int beginIndex = points.size(), nrVertex;
+                    nrVertex = loadPointsToMemory(elem->Attribute("file"), matrix);
+                    DrawSegment segment = DrawSegment(beginIndex, nrVertex);
+                    setDrawSegmentValues(&segment,elem);
+                    segments.push_back(segment);
+                    
                 }
             }
             else if(specialFlag == 1){
@@ -578,9 +687,9 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 
-		GLfloat amb[4] = {0.2, 0.2, 0.2, 1.0};
-		GLfloat diff[4] = {1.0, 1.0, 1.0, 1.0};
-		GLfloat pos[4];
+		float amb[4] = {0.2, 0.2, 0.2, 1.0};
+		float diff[4] = {1.0, 1.0, 1.0, 1.0};
+		float pos[4];
 		for(int i = 0; i < nrOfLights; i++){
 			pos[0] = posOrDirOfLights.at(i*4+0);
 			pos[1] = posOrDirOfLights.at(i*4+1);
@@ -596,15 +705,39 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		}
 
 		drawDynamicRotates();
+		//drawDynamicTranslates
 
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
 		glVertexPointer(3, GL_FLOAT, 0, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
 		glNormalPointer(GL_FLOAT, 0, 0);
-		//TODO: Vector com os materials, faz-se draw para os intervalos de cada material, definir diffuse e ambient por defeito(iguais aos default do openGL)
-		glDrawArrays(GL_TRIANGLES, 0, points.size());
 
-		//drawDynamicTranslates
+
+		float spec[4], em[4];
+		diff[3] = 1.0; amb[3] = 1.0; spec[3] = 1.0; em[3] = 1.0;
+		int beginIndex, nrVertex;
+		vector<DrawSegment>::iterator it;
+		for(it = segments.begin(); it != segments.end(); it++){
+			diff[0] = it->getDiffR(); diff[1] = it->getDiffG(); diff[2] = it->getDiffB();
+			//DEBUG
+			//printf("diff: %f, %f, %f, %f\n",diff[0],diff[1],diff[2],diff[3]);
+			glMaterialfv(GL_FRONT,GL_DIFFUSE,diff);
+
+			amb[0] = it->getAmbR(); amb[1] = it->getAmbG(); amb[2] = it->getAmbB();
+			glMaterialfv(GL_FRONT,GL_AMBIENT,amb);
+
+			spec[0] = it->getSpecR(); spec[1] = it->getSpecG(); spec[2] = it->getSpecB();
+			glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
+
+			em[0] = it->getEmR(); em[1] = it->getEmG(); em[2] = it->getEmB();
+			glMaterialfv(GL_FRONT,GL_EMISSION,em);
+
+			beginIndex = it->getBeginIndex(); nrVertex = it->getNrVertex();
+			glDrawArrays(GL_TRIANGLES, beginIndex, nrVertex);
+		}
+		
+
+		
 
 		// End of frame
 		glutSwapBuffers();
