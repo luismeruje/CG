@@ -1,6 +1,9 @@
 <scene>
 	<lights>
-		<light type = "POINT" X=0 Y=0 Z=0 />
+		<light type = "POINT" X=0 Y=10 Z=0 />
+		<light type = "DIRECTIONAL" X = 10 Y = 90 Z=2 />
+		<light type = "POINT" X=0 Y=10 />
+		<light type = "AS" X=0 Y=9 Z=8 />
 	</lights>
 	<!-- Sun -->
 	<group>
