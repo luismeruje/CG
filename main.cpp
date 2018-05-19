@@ -41,7 +41,9 @@ GLuint buffers[4];
 int nrOfLights = 0;
 //Four doubles per light
 vector<double> posOrDirOfLights;
-
+float ambLight[4] = {0.2, 0.2, 0.2, 1.0};
+float diffLight[4] = {1.0, 1.0, 1.0, 1.0};
+float posLight[4];
 
 //WARNING: Princípios de encapsulamento não foram aplicados por ser um programa simples. São passados objetos entre funções e não cópias.
 class Point
@@ -101,10 +103,10 @@ public:
 		//Almost black
 		this->diffR=0.8; this->diffG=0.8; this->diffB=0.8;
 
-		//White
+		//Black(no effect)
 		this->specR=0; this->specG=0; this->specB=0;
 
-		//White
+		//Black(no effect)
 		this->emR=0; this->emG=0; this->emB=0;
 
 		this->beginIndex = beginIndex;
@@ -141,8 +143,9 @@ public:
 
 vector<Point> points;
 vector< shared_ptr<Rotate> > rotates;
-vector<DrawSegment> segments;
-int nrOfRotates = 0;
+vector<DrawSegment> staticPointsSegments;
+vector<DrawSegment> rotatingPointsSegments;
+int nrAllPointsThatRotate = 0;
 
 //vector<Translate> translates;
 float rotateHorizontal = 0;
@@ -175,7 +178,7 @@ void changeSize(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-int loadPointsToMemory( string fileName, Matrix4d matrix ) {
+int loadStaticModel( string fileName, Matrix4d matrix ) {
 	ifstream input(fileName.c_str());
 	string line;
 	double x, y, z;
@@ -201,12 +204,12 @@ int loadPointsToMemory( string fileName, Matrix4d matrix ) {
 	return 0;
 }
 
-void loadPointsToRotate(string fileName){
+int loadRotatingModel(string fileName){
     ifstream input(fileName.c_str());
     string line;
     shared_ptr<Rotate> rotateInstance = rotates.back();
 
-    vector<float> * rotatePoints = rotateInstance->getModelPoints();
+    vector<float> * rotatingPoints = rotateInstance->getModelPoints();
     double x, y, z;
     int num;
     int pos = 0;
@@ -216,11 +219,13 @@ void loadPointsToRotate(string fileName){
     else {
         while (getline(input, line)) {
             sscanf(line.c_str(), "%lf;%lf;%lf", &x, &y, &z);
-            rotatePoints->push_back(x);
-            rotatePoints->push_back(y);
-            rotatePoints->push_back(z);;
+            rotatingPoints->push_back(x);
+            rotatingPoints->push_back(y);
+            rotatingPoints->push_back(z);;
         }
+        return rotatingPoints->size();
     }
+    return 0;
 
 }
 /*
@@ -349,7 +354,6 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
         shared_ptr<Rotate> newRotate (new Rotate(time,pivot,matrix));
 		rotates.push_back(newRotate);
-		nrOfRotates++;
 	}
 
 	void setDrawSegmentValues(DrawSegment * segment,TiXmlElement * model){
@@ -426,16 +430,21 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
             if(specialFlag == 0){
                 for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
                 	int beginIndex = points.size(), nrVertex;
-                    nrVertex = loadPointsToMemory(elem->Attribute("file"), matrix);
+                    nrVertex = loadStaticModel(elem->Attribute("file"), matrix);
                     DrawSegment segment = DrawSegment(beginIndex, nrVertex);
                     setDrawSegmentValues(&segment,elem);
-                    segments.push_back(segment);
+                    staticPointsSegments.push_back(segment);
                     
                 }
             }
             else if(specialFlag == 1){
             	for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
-                	loadPointsToRotate(elem->Attribute("file"));
+            		int beginIndex = nrAllPointsThatRotate,nrVertex;
+                	nrVertex = loadRotatingModel(elem->Attribute("file"));
+                	nrAllPointsThatRotate += nrVertex;
+                	DrawSegment segment = DrawSegment(beginIndex, nrVertex);
+                    setDrawSegmentValues(&segment,elem);
+                    rotatingPointsSegments.push_back(segment);
                 }
                 //specialFlag = 0;
             }
@@ -600,7 +609,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
 	}
 
-	void fillChangingNormalsVBO(){
+	void fillVBONormalsOfRotatingPoints(){
 		normalv = (float *) malloc(sizeof(float) * changingPoints.size());
 		float v1[3],v2[3];
 		float n[3],norm;
@@ -638,7 +647,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * changingPoints.size(), normalv, GL_STATIC_DRAW);
 	}
 
-	void drawDynamicRotates(){
+	void drawRotatingModels(){
 		vector<shared_ptr<Rotate> >::iterator it;
 		vector<float> * modelPoints;
 		Matrix4d matrix;
@@ -659,16 +668,45 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 				changingPoints.push_back(point[1]);
 				changingPoints.push_back(point[2]);
 			}
+			
+
 		}
-		fillChangingNormalsVBO();
+
+		fillVBONormalsOfRotatingPoints();
 
 		glBindBuffer(GL_ARRAY_BUFFER,buffers[1]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * changingPoints.size(), &(changingPoints[0]), GL_STATIC_DRAW);
 		glVertexPointer(3, GL_FLOAT, 0, 0);
 		glBindBuffer(GL_ARRAY_BUFFER,buffers[3]);
 		glNormalPointer(GL_FLOAT, 0, 0);
-		glDrawArrays(GL_TRIANGLES,0,changingPoints.size()/3);
+
+		vector<DrawSegment>::iterator itSegments;
+		float spec[4], em[4],diff[4],amb[4];
+		diff[3] = 1.0; amb[3] = 1.0; spec[3] = 1.0; em[3] = 1.0;
+		int beginIndex, nrVertex;
+		for(itSegments = rotatingPointsSegments.begin(); itSegments != rotatingPointsSegments.end(); itSegments++){
+			diff[0] = itSegments->getDiffR(); diff[1] = itSegments->getDiffG(); diff[2] = itSegments->getDiffB();
+			//DEBUG
+			//printf("diff: %f, %f, %f, %f\n",diff[0],diff[1],diff[2],diff[3]);
+			glMaterialfv(GL_FRONT,GL_DIFFUSE,diff);
+
+			amb[0] = itSegments->getAmbR(); amb[1] = itSegments->getAmbG(); amb[2] = itSegments->getAmbB();
+			glMaterialfv(GL_FRONT,GL_AMBIENT,amb);
+
+			spec[0] = itSegments->getSpecR(); spec[1] = itSegments->getSpecG(); spec[2] = itSegments->getSpecB();
+			glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
+
+			em[0] = itSegments->getEmR(); em[1] = itSegments->getEmG(); em[2] = itSegments->getEmB();
+			glMaterialfv(GL_FRONT,GL_EMISSION,em);
+
+			beginIndex = itSegments->getBeginIndex(); nrVertex = itSegments->getNrVertex();
+			glDrawArrays(GL_TRIANGLES, beginIndex, nrVertex);
+		}
+
+
+
 		changingPoints.clear();
+		
 
 	}
 
@@ -687,24 +725,22 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 
-		float amb[4] = {0.2, 0.2, 0.2, 1.0};
-		float diff[4] = {1.0, 1.0, 1.0, 1.0};
-		float pos[4];
+		
 		for(int i = 0; i < nrOfLights; i++){
-			pos[0] = posOrDirOfLights.at(i*4+0);
-			pos[1] = posOrDirOfLights.at(i*4+1);
-			pos[2] = posOrDirOfLights.at(i*4+2);
-			pos[3] = posOrDirOfLights.at(i*4+3);
+			posLight[0] = posOrDirOfLights.at(i*4+0);
+			posLight[1] = posOrDirOfLights.at(i*4+1);
+			posLight[2] = posOrDirOfLights.at(i*4+2);
+			posLight[3] = posOrDirOfLights.at(i*4+3);
 
 			//DEBUG
 			//printf("lightID: %d\n\tposition: %f,%f,%f,%f\n",GL_LIGHT0+i,posOrDirOfLights.at(i*4+0),posOrDirOfLights.at(i*4+1),posOrDirOfLights.at(i*4+2),posOrDirOfLights.at(i*4+3));
 
-			glLightfv(GL_LIGHT0+i, GL_POSITION, pos);
-			glLightfv(GL_LIGHT0+i, GL_AMBIENT, amb);
-			glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diff);
+			glLightfv(GL_LIGHT0+i, GL_POSITION, posLight);
+			glLightfv(GL_LIGHT0+i, GL_AMBIENT, ambLight);
+			glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffLight);
 		}
 
-		drawDynamicRotates();
+		drawRotatingModels();
 		//drawDynamicTranslates
 
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
@@ -713,11 +749,11 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		glNormalPointer(GL_FLOAT, 0, 0);
 
 
-		float spec[4], em[4];
+		float spec[4], em[4],diff[4],amb[4];
 		diff[3] = 1.0; amb[3] = 1.0; spec[3] = 1.0; em[3] = 1.0;
 		int beginIndex, nrVertex;
 		vector<DrawSegment>::iterator it;
-		for(it = segments.begin(); it != segments.end(); it++){
+		for(it = staticPointsSegments.begin(); it != staticPointsSegments.end(); it++){
 			diff[0] = it->getDiffR(); diff[1] = it->getDiffG(); diff[2] = it->getDiffB();
 			//DEBUG
 			//printf("diff: %f, %f, %f, %f\n",diff[0],diff[1],diff[2],diff[3]);
