@@ -5,9 +5,18 @@
 	<!-- Sun -->
 	<group>
 		<scale X=15 Y=15 Z=15 />
+		<rotate time=0.2 axisX=0 axisY=1 axisZ=0 />
 		<models>
-			<model file="sphere.3d" />
+			<model file="sphere.3d" emR=1 emG=1 emB=1 />
 		</models>
+		<group>
+		      <scale X=0.1 Y=0.1 Z=0.1 />
+		      <translate X=19 Y=0 Z=5 />
+		      <rotate time=0.2 axisX=0 axisY=1 axisZ=0 />
+                      <models>
+                          <model file="cometa.3d" diffR=0.2 diffG=0.8 diffB=0.2 />
+                      </models>
+		</group>
 		<!-- Mercury -->
 		<group>
 			<scale X=0.1 Y=0.1 Z=0.1 />
@@ -180,9 +189,9 @@
 		<group>
 		     <scale X=0.2 Y=0.2 Z=0.2 />
 		     <translate X=55 Y=0 Z=0 />
-		     <rotate time=20 axisX=0 axisY=1 axisZ=0 />
+		     <rotate time=5 axisX=0 axisY=1 axisZ=0 />
 		     <models>
-           		 <model file="cometa.3d" />
+           		 <model file="cometa.3d" diffR=0.2 diffG=0.8 diffB=0.2 />
 		     </models>
 		</group>
 

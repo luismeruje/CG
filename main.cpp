@@ -25,78 +25,83 @@ using namespace std::tr1;
 #include <vector>
 #include <iostream>
 #include <limits>
-#include "Eigen/Dense"
 
 
+#define ROTATE 0
+#define TRANSLATE 1
+#define SCALE 2
+#define ROTATE_TIME 3
+#define TRANSLATE_TIME 4
+#define TransformationType int
 
-using namespace Eigen;
 using namespace std;
-float *vertexb;
-float *normalb;
-float *normalv;
-vector<float> changingPoints;
 
-GLuint buffers[4];
+float rotateHorizontal = 0;
+float rotateVertical = 0;
+int mode = GL_LINE;
 
-int nrOfLights = 0;
+GLuint buffers[2];
+
+
 //Four doubles per light
 vector<double> posOrDirOfLights;
 float ambLight[4] = {0.2, 0.2, 0.2, 1.0};
 float diffLight[4] = {1.0, 1.0, 1.0, 1.0};
 float posLight[4];
+int nrOfLights = 0;
 
-//WARNING: Princípios de encapsulamento não foram aplicados por ser um programa simples. São passados objetos entre funções e não cópias.
-class Point
-{
-	double x, y, z;
-public:
 
-	Point(double x, double y, double z){
-		this->x = x;
-		this->y = y;
-		this->z = z;
+
+//WARNING: Princípios de encapsulamento não foram aplicados por ser um programa simples e para aumentar performance. 
+//São passadas referências de objetos entre funções e não cópias.
+//TODO: destroy method's
+
+void calculateNormals(vector<float> * vertexb, vector<float> * normalb){
+	normalb->clear();
+	float v1[3],v2[3];
+	float n[3],norm;
+
+	for(int i = 0; i < vertexb->size() / 9; i++){
+		v1[0] = vertexb->at(i*9+3) - vertexb->at(i*9+0);
+		v1[1] = vertexb->at(i*9+4) - vertexb->at(i*9+1);
+		v1[2] = vertexb->at(i*9+5) - vertexb->at(i*9+2);
+		v2[0] = vertexb->at(i*9+6) - vertexb->at(i*9+0);
+		v2[1] = vertexb->at(i*9+7) - vertexb->at(i*9+1);
+		v2[2] = vertexb->at(i*9+8) - vertexb->at(i*9+2);
+
+		n[0] = v1[1]*v2[2] - v1[2]*v2[1];
+		n[1] = v1[2]*v2[0] - v1[0]*v2[2];
+		n[2] = v1[0]*v2[1] - v1[1]*v2[0];
+
+		norm = sqrt(pow(n[0],2)+pow(n[1],2)+pow(n[2],2));
+
+		n[0] = n[0] / norm;
+		n[1] = n[1] / norm;
+		n[2] = n[2] / norm;
+
+		normalb->push_back(n[0]);
+		normalb->push_back(n[1]);
+		normalb->push_back(n[2]);
+		normalb->push_back(n[0]);
+		normalb->push_back(n[1]);
+		normalb->push_back(n[2]);
+		normalb->push_back(n[0]);
+		normalb->push_back(n[1]);
+		normalb->push_back(n[2]);
 	}
+}
 
-	double getX(){ return x; }
-	double getY(){ return y; }
-	double getZ(){ return z; }
-};
-
-class Rotate
-{
-    vector<float> modelPoints;
-    int time;
-    float * pivot;
-    Matrix4d matrix;
-
-public:
-    Rotate(int time,shared_ptr<Point> pivot, Matrix4d matrix){
-        this->time = time;
-        this->pivot = (float *)malloc(sizeof(float) * 3);
-        this->pivot[0] = pivot->getX();
-        this->pivot[1] = pivot->getY();
-        this->pivot[2] = pivot->getZ();
-        this->matrix = matrix;
-    }
-
-    vector<float> * getModelPoints(){return &modelPoints;}
-	int getTime(){return time;}
-	float*  getPivot(){return pivot;}
-	Matrix4d getMatrix(){return matrix;}
-
-};
-
-class DrawSegment
+class MaterialLightProperties
 {
 	float diffR, diffG, diffB;
 	float ambR, ambG, ambB;
 	float specR, specG, specB;
 	float emR, emG, emB;
-	int beginIndex;
-	int nrVertex;
 
 public:
-	DrawSegment(int beginIndex, int nrVertex){
+	MaterialLightProperties(){
+		//DEFAULT values
+
 		//Almost white
 		this->ambR=0.2; this->ambG=0.2; this->ambB=0.2;
 		
@@ -109,8 +114,6 @@ public:
 		//Black(no effect)
 		this->emR=0; this->emG=0; this->emB=0;
 
-		this->beginIndex = beginIndex;
-		this->nrVertex = nrVertex;
 	}
 
 	void setAmbR(float ambR){this->ambR = ambR;}
@@ -137,21 +140,158 @@ public:
 	float getEmR(){return emR;}
 	float getEmG(){return emG;}
 	float getEmB(){return emB;}
-	float getBeginIndex(){return beginIndex;}
-	float getNrVertex(){return nrVertex;}
 };
 
-vector<Point> points;
-vector< shared_ptr<Rotate> > rotates;
-vector<DrawSegment> staticPointsSegments;
-vector<DrawSegment> rotatingPointsSegments;
-int nrAllPointsThatRotate = 0;
 
-//vector<Translate> translates;
-float rotateHorizontal = 0;
-float rotateVertical = 0;
-float color1 = 1, color2 = 1, color3 = 1;
-int mode = GL_LINE;
+
+
+class Model{
+	vector<float> vertexb;
+	vector<float> normalb;
+	MaterialLightProperties lightProperties;
+
+public:
+	Model(MaterialLightProperties lightProperties){
+		//Bad idea to pass vector of points as argument,
+		//Could imply making copy of all coordinates.
+
+		//TODO: check if this works
+		this->lightProperties = lightProperties;
+
+	}
+
+	vector<float> * getVertexb(){return &vertexb;}
+
+	void draw(){
+		calculateNormals(&vertexb,&normalb);
+		
+
+		float spec[4], em[4],diff[4],amb[4];
+		diff[3] = 1.0; amb[3] = 1.0; spec[3] = 1.0; em[3] = 1.0;
+		diff[0] = lightProperties.getDiffR(); diff[1] = lightProperties.getDiffG(); diff[2] = lightProperties.getDiffB();
+		//DEBUG
+		//printf("diff: %f, %f, %f, %f\n",diff[0],diff[1],diff[2],diff[3]);
+		glMaterialfv(GL_FRONT,GL_DIFFUSE,diff);
+
+		amb[0] = lightProperties.getAmbR(); amb[1] = lightProperties.getAmbG(); amb[2] = lightProperties.getAmbB();
+		glMaterialfv(GL_FRONT,GL_AMBIENT,amb);
+
+		spec[0] = lightProperties.getSpecR(); spec[1] = lightProperties.getSpecG(); spec[2] = lightProperties.getSpecB();
+		glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
+
+		em[0] = lightProperties.getEmR(); em[1] = lightProperties.getEmG(); em[2] = lightProperties.getEmB();
+		glMaterialfv(GL_FRONT,GL_EMISSION,em);
+
+
+		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(float) * vertexb.size(),&(vertexb[0]),GL_STATIC_DRAW);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(float) * normalb.size(),&(normalb[0]),GL_STATIC_DRAW);
+		glNormalPointer(GL_FLOAT, 0, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, vertexb.size());
+
+	}
+};
+
+class Transformation{
+	TransformationType type;
+	float x, y, z, angle, time;
+	vector<float> curvePoints;
+
+public:
+	Transformation(TransformationType type){
+		this->type = type;
+		x = 0;
+		y = 0;
+		z = 0;
+		angle = 0;
+		time = 0;
+	}
+
+	void setX(float x){this->x = x;}
+	void setY(float y){this->y = y;}
+	void setZ(float z){this->z = z;}
+	void setAngle(float angle){this->angle = angle;}
+	void setTime(float time){this->time = time;}
+
+	vector<float> * getCurvePoints(){return &curvePoints;}
+
+	float getX(){return x;}
+	float getY(){return y;}
+	float getZ(){return z;}
+	float getAngle(){return angle;}
+	float getTime(){return time;}
+	TransformationType getType(){return type;}
+
+	void apply(){
+		switch(type){
+			case ROTATE:
+				glRotatef(angle,x,y,z);
+				break;
+			case TRANSLATE:
+				glTranslatef(x,y,z);
+				break;
+			case SCALE:
+				glScalef(x,y,z);
+				break;
+			case ROTATE_TIME:
+
+				float timeNow = glutGet(GLUT_ELAPSED_TIME);
+				angle = timeNow * ((2 * M_PI) / (time * 1000));
+				glRotatef(angle,x,y,z);
+				break;
+		}
+	}
+
+};
+
+//TODO: group models with no time tranformations in separate class, at the end of processing, with it's own
+//VBO's, to avoid having to fill identical VBO's in each frame (vs. just one time);
+class Group{
+	vector<Transformation> transformations;
+	vector<Model> models;
+	vector<Group *> subGroups;
+
+public:
+	Group(){}
+
+	vector<Transformation> * getTransformations(){return &transformations;}
+	vector<Model> * getModels(){return &models;}
+	vector<Group *> * getSubGroups(){return &subGroups;}
+
+	void drawGroupAndSubGroups(){
+		int i;
+		glPushMatrix();
+		vector<Transformation>::iterator transformationsIt;
+		for(transformationsIt = transformations.begin();transformationsIt != transformations.end();transformationsIt++){
+			transformationsIt->apply();
+		}
+
+		vector<Model>::iterator modelsIt;
+		for(modelsIt = models.begin(); modelsIt != models.end(); modelsIt++){
+			modelsIt->draw();
+		}
+
+		vector<Group *>::iterator subGroupsIt;
+		for(i = 0,subGroupsIt = subGroups.begin(); subGroupsIt != subGroups.end(); subGroupsIt++,i++){	
+			subGroups.at(i)->drawGroupAndSubGroups();
+			
+		}
+		glPopMatrix();
+	}
+
+	void addTransformation(Transformation t){
+		transformations.push_back(t);
+	}
+	
+};
+
+
+vector<Group *> rootGroups;
+
+
 
 void changeSize(int w, int h) {
 
@@ -177,7 +317,7 @@ void changeSize(int w, int h) {
 	// return to the model view matrix mode
 	glMatrixMode(GL_MODELVIEW);
 }
-
+/*
 int loadStaticModel( string fileName, Matrix4d matrix ) {
 	ifstream input(fileName.c_str());
 	string line;
@@ -228,7 +368,7 @@ int loadRotatingModel(string fileName){
     return 0;
 
 }
-/*
+
 // given  global t, returns the point in the curve
     void getGlobalCatmullRomPoint(float gt, float *pos, float *deriv) {
 
@@ -276,7 +416,7 @@ void getCatmullRomPoint(float t, float *p0, float *p1, float *p2, float *p3, flo
     }
     // ...
 }
- */
+ 
 	Matrix4d translateMatrix(TiXmlElement *elem, Matrix4d matrix) {
 		double x, y, z;
 		Matrix4d translationMatrix(4, 4);
@@ -292,7 +432,7 @@ void getCatmullRomPoint(float t, float *p0, float *p1, float *p2, float *p3, flo
 
 		return translationMatrix * matrix;
 	}
-/*
+
 Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pontos, int time){
     double x, y, z;
     Matrix4d translationMatrix(4,4);
@@ -301,7 +441,7 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
     elem->Attribute( "Y",&y );
     elem->Attribute( "Z",&z );
 }
-*/
+*/ /*
 
 	Matrix4d rotateMatrix(TiXmlElement *elem, Matrix4d matrix) {
 		double angle, x, y, z, angleCosine, angleSin;
@@ -355,106 +495,161 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
         shared_ptr<Rotate> newRotate (new Rotate(time,pivot,matrix));
 		rotates.push_back(newRotate);
 	}
-
-	void setDrawSegmentValues(DrawSegment * segment,TiXmlElement * model){
+*/
+	void setMaterialLightPropertiesValues(MaterialLightProperties * properties,TiXmlElement * model){
 		double paramValue;
 		if(model->Attribute("diffR",&paramValue)){
-			segment->setDiffR((float)paramValue);
+			properties->setDiffR((float)paramValue);
 		}
 		if(model->Attribute("diffG",&paramValue)){
-			segment->setDiffG((float)paramValue);
+			properties->setDiffG((float)paramValue);
 		}
 		if(model->Attribute("diffB",&paramValue)){
-			segment->setDiffB((float)paramValue);
+			properties->setDiffB((float)paramValue);
 		}
 
 		if(model->Attribute("ambR",&paramValue)){
-			segment->setAmbR((float)paramValue);
+			properties->setAmbR((float)paramValue);
 		}
 		if(model->Attribute("ambG",&paramValue)){
-			segment->setAmbG((float)paramValue);
+			properties->setAmbG((float)paramValue);
 		}
 		if(model->Attribute("ambB",&paramValue)){
-			segment->setAmbB((float)paramValue);
+			properties->setAmbB((float)paramValue);
 		}
 
 		if(model->Attribute("specR",&paramValue)){
-			segment->setSpecR((float)paramValue);
+			properties->setSpecR((float)paramValue);
 		}
 		if(model->Attribute("specG",&paramValue)){
-			segment->setSpecG((float)paramValue);
+			properties->setSpecG((float)paramValue);
 		}
 		if(model->Attribute("specB",&paramValue)){
-			segment->setSpecB((float)paramValue);
+			properties->setSpecB((float)paramValue);
 		}
 
 		if(model->Attribute("emR",&paramValue)){
-			segment->setEmR((float)paramValue);
+			properties->setEmR((float)paramValue);
 		}
 		if(model->Attribute("emG",&paramValue)){
-			segment->setEmG((float)paramValue);
+			properties->setEmG((float)paramValue);
 		}
 		if(model->Attribute("emB",&paramValue)){
-			segment->setEmB((float)paramValue);
+			properties->setEmB((float)paramValue);
 		}
 	}
 
-	void loadGroupFromXML(TiXmlElement *group, Matrix4d matrix) {
-		TiXmlElement *elem;
+	void addModel(TiXmlElement * elem, vector<Model> * models){
+		string fileName = elem->Attribute("file");
+
+		MaterialLightProperties properties = MaterialLightProperties();
+
+		setMaterialLightPropertiesValues(&properties,elem);
+
+		Model model = Model(properties);
+		vector<float> * vertexb = model.getVertexb();
+
+
+		ifstream input(fileName.c_str());
+		if (!input)
+			printf("Unable to open: %s\n", fileName.c_str());
+		else {
+			double x, y, z;
+			string line;
+			while (getline(input, line)) {
+				sscanf(line.c_str(), "%lf;%lf;%lf", &x, &y, &z);
+				vertexb->push_back(x);
+				vertexb->push_back(y);
+				vertexb->push_back(z);
+			}
+
+		}
+		models->push_back(model);
+	}
+
+	void addTransformation(TransformationType type,TiXmlElement * elem,Group * currentGroup){
+		Transformation t = Transformation(type);
+		double x=0,y=0,z=0,time=0,angle=0;
+
+		elem->Attribute("X",&x);
+		elem->Attribute("Y",&y);
+		elem->Attribute("Z",&z);
+
+		switch(type){
+			case ROTATE:
+				elem->Attribute("axisX",&x);
+				elem->Attribute("axisY",&y);
+				elem->Attribute("axisZ",&z);
+				elem->Attribute("angle",&angle);
+				break;
+			case ROTATE_TIME:
+				printf("One rotateTime");
+				elem->Attribute("axisX",&x);
+				elem->Attribute("axisY",&y);
+				elem->Attribute("axisZ",&z);
+				elem->Attribute("time",&time);
+				break;
+		}
+
+		t.setX((float)x);
+		t.setY((float)y);
+		t.setZ((float)z);
+		t.setTime((float)time);
+		t.setAngle((float)angle);
+		currentGroup->addTransformation(t);
+
+	}
+
+	void loadGroupFromXML(TiXmlElement *groupElem, Group * currentGroup) {
+		vector<Group *> * subGroups = currentGroup->getSubGroups();
+		vector<Transformation> * transformations = currentGroup->getTransformations();
+		vector<Model> * models = currentGroup->getModels();
+
+		TiXmlElement * elem;
 		double angle, x, y, z;
-		int translateFlag = 0, rotateFlag = 0, scaleFlag = 0,specialFlag = 0;
+		int translateFlag = 0, rotateFlag = 0, scaleFlag = 0;
 
 
-		for (elem = group->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement()) {
+		for (elem = groupElem->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement()) {
 			if (strcmp(elem->Value(), "translate") == 0 && translateFlag == 0) {
-				matrix = translateMatrix(elem, matrix);
+				addTransformation(TRANSLATE,elem,currentGroup);
 				translateFlag++;
 			} else if (strcmp(elem->Value(), "rotate") == 0 && rotateFlag == 0) {
                 const char *isSpecialRotate = elem->Attribute("time");
 				if (isSpecialRotate) {
-                    createNewRotate(elem,matrix);
-                    specialFlag=1;
+                    addTransformation(ROTATE_TIME,elem,currentGroup);
                 }
-				else
-					matrix = rotateMatrix(elem, matrix);
+				else{
+					addTransformation(ROTATE,elem,currentGroup);
+				}
 				rotateFlag++;
 			} else if (strcmp(elem->Value(), "scale") == 0 && scaleFlag == 0) {
-				matrix = scaleMatrix(elem, matrix);
+				addTransformation(SCALE,elem,currentGroup);
 				scaleFlag++;
 			}
 		}
 
 		// Models
-		elem = group->FirstChildElement("models");
+		elem = groupElem->FirstChildElement("models");
 		if (elem != NULL) {
-            if(specialFlag == 0){
                 for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
-                	int beginIndex = points.size(), nrVertex;
-                    nrVertex = loadStaticModel(elem->Attribute("file"), matrix);
-                    DrawSegment segment = DrawSegment(beginIndex, nrVertex);
-                    setDrawSegmentValues(&segment,elem);
-                    staticPointsSegments.push_back(segment);
-                    
+                    addModel(elem, models);
+                    //DrawSegment segment = DrawSegment(beginIndex, nrVertex);
+                    //setDrawSegmentValues(&segment,elem);
+                    //staticPointsSegments.push_back(segment);
                 }
-            }
-            else if(specialFlag == 1){
-            	for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
-            		int beginIndex = nrAllPointsThatRotate,nrVertex;
-                	nrVertex = loadRotatingModel(elem->Attribute("file"));
-                	nrAllPointsThatRotate += nrVertex;
-                	DrawSegment segment = DrawSegment(beginIndex, nrVertex);
-                    setDrawSegmentValues(&segment,elem);
-                    rotatingPointsSegments.push_back(segment);
-                }
-                //specialFlag = 0;
-            }
+            
 		}
 
 		// Other groups
-		for (elem = group->FirstChildElement("group"); elem != NULL; elem = elem->NextSiblingElement("group"))
-			loadGroupFromXML(elem, matrix);
+		for (elem = groupElem->FirstChildElement("group"); elem != NULL; elem = elem->NextSiblingElement("group")){
+			Group * subGroup = new Group();
+			subGroups->push_back(subGroup);
+			loadGroupFromXML(elem, subGroup);
+		}
 
 	}
+
 
 	void registerLight(TiXmlElement * light){
 		double X=0,Y=0, Z=0;
@@ -490,7 +685,6 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
 	void loadXML(const char *xmlFile) {
 		TiXmlDocument doc(xmlFile);
-		Matrix4d matrix = Matrix4d::Identity(4, 4);
 
 		bool loaded = doc.LoadFile();
 		if (loaded) {
@@ -503,9 +697,13 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 						registerLight(light);
 					}
 				}
-				for (TiXmlElement *group = root->FirstChildElement("group");
-					 group != NULL; group = group->NextSiblingElement("group"))
-					loadGroupFromXML(group, matrix);
+				for (TiXmlElement *groupElem = root->FirstChildElement("group");
+					 groupElem != NULL; groupElem = groupElem->NextSiblingElement("group")){
+					
+					Group * rootGroup = new Group();
+					rootGroups.push_back(rootGroup);
+					loadGroupFromXML(groupElem,rootGroup);
+				}
 			}
 		} else
 			printf("Failed to load %s \n.", xmlFile);
@@ -550,30 +748,13 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 			case 'p':
 				mode = GL_POINT;
 				break;
-			case '1':
-				if (color1 < 1.0) color1 += 0.1;
-				break;
-			case '2':
-				if (color2 < 1.0) color2 += 0.1;
-				break;
-			case '3':
-				if (color3 < 1.0) color3 += 0.1;
-				break;
-			case '4':
-				if (color1 > 0.0) color1 -= 0.1;
-				break;
-			case '5':
-				if (color2 > 0.0) color2 -= 0.1;
-				break;
-			case '6':
-				if (color3 > 0.0) color3 -= 0.1;
-				break;
 			default:
 				break;
 		}
 		glutPostRedisplay();
 	}
 
+/*
 	Matrix4d rotateMatrixwtime(double x, double y, double z, Matrix4d matrix, int time) {
 		double angle, angleCosine, angleSin, timeNow;
 		Matrix4d rotationMatrix(4, 4);
@@ -595,58 +776,11 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		return rotationMatrix * matrix;
 
 	}
+*/
 
-	void getRotatePointPosition(double x, double y, double z, int time, Matrix4d matrixBeforeRotation, float * pivot,float* actualPoint){
-		Vector4d coord;
-		Matrix4d matrix = rotateMatrixwtime(pivot[0],pivot[1],pivot[2],matrixBeforeRotation,time);
+	
 
-        coord << x, y, z, 1;
-
-        coord = matrix * coord;
-        actualPoint[0] = coord(0);
-        actualPoint[1] = coord(1);
-        actualPoint[2] = coord(2);
-
-	}
-
-	void fillVBONormalsOfRotatingPoints(){
-		normalv = (float *) malloc(sizeof(float) * changingPoints.size());
-		float v1[3],v2[3];
-		float n[3],norm;
-
-		for(int i = 0; i < changingPoints.size() / 9; i++){
-			v1[0] = changingPoints.at(i*9+3) - changingPoints.at(i*9+0);
-			v1[1] = changingPoints.at(i*9+4) - changingPoints.at(i*9+1);
-			v1[2] = changingPoints.at(i*9+5) - changingPoints.at(i*9+2);
-			v2[0] = changingPoints.at(i*9+6) - changingPoints.at(i*9+0);
-			v2[1] = changingPoints.at(i*9+7) - changingPoints.at(i*9+1);
-			v2[2] = changingPoints.at(i*9+8) - changingPoints.at(i*9+2);
-
-			n[0] = v1[1]*v2[2] - v1[2]*v2[1];
-			n[1] = v1[2]*v2[0] - v1[0]*v2[2];
-			n[2] = v1[0]*v2[1] - v1[1]*v2[0];
-
-			norm = sqrt(pow(n[0],2)+pow(n[1],2)+pow(n[2],2));
-
-			n[0] = n[0] / norm;
-			n[1] = n[1] / norm;
-			n[2] = n[2] / norm;
-
-			normalv[i*9+0] = n[0];
-			normalv[i*9+1] = n[1];
-			normalv[i*9+2] = n[2];
-			normalv[i*9+3] = n[0];
-			normalv[i*9+4] = n[1];
-			normalv[i*9+5] = n[2];
-			normalv[i*9+6] = n[0];
-			normalv[i*9+7] = n[1];
-			normalv[i*9+8] = n[2];
-		}
-
-		glBindBuffer(GL_ARRAY_BUFFER, buffers[3]);;
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * changingPoints.size(), normalv, GL_STATIC_DRAW);
-	}
-
+/*
 	void drawRotatingModels(){
 		vector<shared_ptr<Rotate> >::iterator it;
 		vector<float> * modelPoints;
@@ -709,10 +843,10 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		
 
 	}
-
-
-	//TODO: sun should be emissive(plus light at center of sun = pretty good looking solar system)
+*/
 	void renderScene(void) {
+		int i;
+
 		glPolygonMode(GL_FRONT, mode);
 		// clear buffers
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -720,13 +854,13 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
 		// set the camera
 		glLoadIdentity();
-		gluLookAt(250.0 * cos(rotateVertical) * sin(rotateHorizontal), 250.0 * sin(rotateVertical),
-				  250.0 * cos(rotateVertical) * cos(rotateHorizontal),
+		gluLookAt(150.0 * cos(rotateVertical) * sin(rotateHorizontal), 150.0 * sin(rotateVertical),
+				  150.0 * cos(rotateVertical) * cos(rotateHorizontal),
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 
 		
-		for(int i = 0; i < nrOfLights; i++){
+		for(i = 0; i < nrOfLights; i++){
 			posLight[0] = posOrDirOfLights.at(i*4+0);
 			posLight[1] = posOrDirOfLights.at(i*4+1);
 			posLight[2] = posOrDirOfLights.at(i*4+2);
@@ -738,42 +872,13 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 			glLightfv(GL_LIGHT0+i, GL_POSITION, posLight);
 			glLightfv(GL_LIGHT0+i, GL_AMBIENT, ambLight);
 			glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffLight);
+		}		
+		glColor3f(1.0, 1.0, 0.5);
+		vector<Group *>::iterator rootGroupsIt;
+
+		for(i=0,rootGroupsIt = rootGroups.begin(); rootGroupsIt != rootGroups.end(); rootGroupsIt++,i++){
+			rootGroups.at(i)->drawGroupAndSubGroups();
 		}
-
-		drawRotatingModels();
-		//drawDynamicTranslates
-
-		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-		glVertexPointer(3, GL_FLOAT, 0, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
-		glNormalPointer(GL_FLOAT, 0, 0);
-
-
-		float spec[4], em[4],diff[4],amb[4];
-		diff[3] = 1.0; amb[3] = 1.0; spec[3] = 1.0; em[3] = 1.0;
-		int beginIndex, nrVertex;
-		vector<DrawSegment>::iterator it;
-		for(it = staticPointsSegments.begin(); it != staticPointsSegments.end(); it++){
-			diff[0] = it->getDiffR(); diff[1] = it->getDiffG(); diff[2] = it->getDiffB();
-			//DEBUG
-			//printf("diff: %f, %f, %f, %f\n",diff[0],diff[1],diff[2],diff[3]);
-			glMaterialfv(GL_FRONT,GL_DIFFUSE,diff);
-
-			amb[0] = it->getAmbR(); amb[1] = it->getAmbG(); amb[2] = it->getAmbB();
-			glMaterialfv(GL_FRONT,GL_AMBIENT,amb);
-
-			spec[0] = it->getSpecR(); spec[1] = it->getSpecG(); spec[2] = it->getSpecB();
-			glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
-
-			em[0] = it->getEmR(); em[1] = it->getEmG(); em[2] = it->getEmB();
-			glMaterialfv(GL_FRONT,GL_EMISSION,em);
-
-			beginIndex = it->getBeginIndex(); nrVertex = it->getNrVertex();
-			glDrawArrays(GL_TRIANGLES, beginIndex, nrVertex);
-		}
-		
-
-		
 
 		// End of frame
 		glutSwapBuffers();
@@ -781,86 +886,14 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
 	}
 
-	void fillConstantNormalsVBO(){
-		normalb = (float *) malloc(sizeof(float) * points.size() * 3);
-		float v1[3],v2[3];
-		float n[3],norm;
 
-		for(int i = 0; i < points.size() / 3; i++){
-			v1[0] = vertexb[i*9+3] - vertexb[i*9+0];
-			v1[1] = vertexb[i*9+4] - vertexb[i*9+1];
-			v1[2] = vertexb[i*9+5] - vertexb[i*9+2];
-			v2[0] = vertexb[i*9+6] - vertexb[i*9+0];
-			v2[1] = vertexb[i*9+7] - vertexb[i*9+1];
-			v2[2] = vertexb[i*9+8] - vertexb[i*9+2];
-
-			n[0] = v1[1]*v2[2] - v1[2]*v2[1];
-			n[1] = v1[2]*v2[0] - v1[0]*v2[2];
-			n[2] = v1[0]*v2[1] - v1[1]*v2[0];
-
-			norm = sqrt(pow(n[0],2)+pow(n[1],2)+pow(n[2],2));
-
-			n[0] = n[0] / norm;
-			n[1] = n[1] / norm;
-			n[2] = n[2] / norm;
-
-			normalb[i*9+0] = n[0];
-			normalb[i*9+1] = n[1];
-			normalb[i*9+2] = n[2];
-			normalb[i*9+3] = n[0];
-			normalb[i*9+4] = n[1];
-			normalb[i*9+5] = n[2];
-			normalb[i*9+6] = n[0];
-			normalb[i*9+7] = n[1];
-			normalb[i*9+8] = n[2];
-		}
-
-		glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * points.size() * 3, normalb, GL_STATIC_DRAW);
-	}
-
-	void fillConstantVBOs() {
-
-		vector<Point>::iterator it;
-		glColor3f(color1, color2, color3);
-		vertexb = (float *) malloc(sizeof(float) * points.size() * 3);
-		
-		int pos = 0;
-		for (it = points.begin(); it != points.end(); it++) {
-			vertexb[pos++] = (it->getX());
-			vertexb[pos++] = (it->getY());
-			vertexb[pos++] = (it->getZ());
-
-			/**
-                glVertex3f(it->getX(),it->getY(),it->getZ());
-                it++;
-                glVertex3f(it->getX(),it->getY(),it->getZ());
-                it++;
-                glVertex3f(it->getX(),it->getY(),it->getZ());
-             */		
-
-		}
-
-		
-		glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);;
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * points.size() * 3, vertexb, GL_STATIC_DRAW);
-
-		fillConstantNormalsVBO();
-
-	}
 	void initGL() {
 		//  OpenGL settings
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
-		glGenBuffers(4, buffers);
-
-		//DEBUG
-		float red[4] = {0.8f, 0.2f, 0.2f, 1.0f};
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, red);
-
-		
+		glGenBuffers(2, buffers);
 
 		if(nrOfLights > 0)
 			glEnable(GL_LIGHTING);
@@ -868,12 +901,6 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		for(int i = 0; i < nrOfLights; i++){
 			glEnable(GL_LIGHT0+i);
 		}
-
-		
-
-
-		
-
 	}
 
 	int main(int argc, char **argv) {
@@ -900,8 +927,6 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 		//initialize glew
 		glewInit();
 #endif
-
-
 		//Load all elements from xml file
 		loadXML(argv[1]);
 
@@ -911,9 +936,6 @@ Matrix4d  translateMatrixwtime(TiXmlElement * elem, Matrix4d matrix, Point* pont
 
 		//Initialize OpenGL
 		initGL();
-
-		//Fill buffer[0] and buffer[2] with static vectors and respective normals
-		fillConstantVBOs();
 
 		// enter GLUT's main cycle
 		glutMainLoop();
