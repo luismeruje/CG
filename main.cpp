@@ -36,16 +36,17 @@ using namespace std::tr1;
 
 using namespace std;
 
-float rotateHorizontal = 0;
-float rotateVertical = 0;
+float rotateHorizontal = -0.2;
+float rotateVertical = 0.5;
 int mode = GL_LINE;
+float cameraDistance = 150;
 
 GLuint buffers[2];
 
 
 //Four doubles per light
 vector<double> posOrDirOfLights;
-float ambLight[4] = {0.2, 0.2, 0.2, 1.0};
+float ambLight[4] = {0.8, 0.2, 0.2, 1.0};
 float diffLight[4] = {1.0, 1.0, 1.0, 1.0};
 float posLight[4];
 int nrOfLights = 0;
@@ -404,7 +405,6 @@ void changeSize(int w, int h) {
 				elem->Attribute("angle",&angle);
 				break;
 			case ROTATE_TIME:
-				printf("One rotateTime");
 				elem->Attribute("axisX",&x);
 				elem->Attribute("axisY",&y);
 				elem->Attribute("axisZ",&z);
@@ -455,9 +455,6 @@ void changeSize(int w, int h) {
 		if (elem != NULL) {
                 for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
                     addModel(elem, models);
-                    //DrawSegment segment = DrawSegment(beginIndex, nrVertex);
-                    //setDrawSegmentValues(&segment,elem);
-                    //staticPointsSegments.push_back(segment);
                 }
             
 		}
@@ -569,6 +566,11 @@ void changeSize(int w, int h) {
 			case 'p':
 				mode = GL_POINT;
 				break;
+			case 'i':
+				cameraDistance -= 2;
+				break;
+			case 'o':
+				cameraDistance += 2;
 			default:
 				break;
 		}
@@ -585,8 +587,8 @@ void changeSize(int w, int h) {
 
 		// set the camera
 		glLoadIdentity();
-		gluLookAt(150.0 * cos(rotateVertical) * sin(rotateHorizontal), 150.0 * sin(rotateVertical),
-				  150.0 * cos(rotateVertical) * cos(rotateHorizontal),
+		gluLookAt(cameraDistance * cos(rotateVertical) * sin(rotateHorizontal), cameraDistance * sin(rotateVertical),
+				  cameraDistance * cos(rotateVertical) * cos(rotateHorizontal),
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 
@@ -636,7 +638,7 @@ void changeSize(int w, int h) {
 
 	int main(int argc, char **argv) {
 
-		printf("Use arrows to rotate image.\nTo change filling:\nf-> FILL\nl-> LINE\np->POINT\n");
+		printf("Use arrows to rotate image.\ni = ZOOM in;\no = ZOOM out;\nTo change filling:\nf-> FILL\nl-> LINE\np->POINT\n");
 
 		// init GLUT and the window
 		glutInit(&argc, argv);
