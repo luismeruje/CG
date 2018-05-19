@@ -189,7 +189,7 @@ public:
 		glBufferData(GL_ARRAY_BUFFER,sizeof(float) * normalb.size(),&(normalb[0]),GL_STATIC_DRAW);
 		glNormalPointer(GL_FLOAT, 0, 0);
 
-		glDrawArrays(GL_TRIANGLES, 0, vertexb.size());
+		glDrawArrays(GL_TRIANGLES, 0, vertexb.size()/3);
 
 	}
 };
