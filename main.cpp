@@ -286,6 +286,8 @@ class Transformation{
 	TransformationType type;
 	float x, y, z, angle, time;
 	vector<float> curvePoints;
+	float pos[4], deriv[4], ys[3] = {0, 1, 0}, zs[3], rotMatrix[16];
+
 
 public:
 	Transformation(TransformationType type){
@@ -310,12 +312,140 @@ public:
 		curvePoints.push_back(z);
 	}
 
+
 	float getX(){return x;}
 	float getY(){return y;}
 	float getZ(){return z;}
 	float getAngle(){return angle;}
 	float getTime(){return time;}
 	TransformationType getType(){return type;}
+
+	void buildRotMatrix(float *x, float *y, float *z, float *m) {
+
+		m[0] = x[0]; m[1] = x[1]; m[2] = x[2]; m[3] = 0;
+		m[4] = y[0]; m[5] = y[1]; m[6] = y[2]; m[7] = 0;
+		m[8] = z[0]; m[9] = z[1]; m[10] = z[2]; m[11] = 0;
+		m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
+	}
+
+
+	void cross(float *a, float *b, float *res) {
+
+		res[0] = a[1]*b[2] - a[2]*b[1];
+		res[1] = a[2]*b[0] - a[0]*b[2];
+		res[2] = a[0]*b[1] - a[1]*b[0];
+	}
+
+
+	void normalize(float *a) {
+
+		float l = sqrt(a[0]*a[0] + a[1] * a[1] + a[2] * a[2]);
+		a[0] = a[0]/l;
+		a[1] = a[1]/l;
+		a[2] = a[2]/l;
+	}
+
+
+	float length(float *v) {
+
+		float res = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+		return res;
+
+	}
+
+	void multMatrixVector(float *m, float *v, float *res) {
+
+		for (int j = 0; j < 4; ++j) {
+			res[j] = 0;
+			for (int k = 0; k < 4; ++k) {
+				res[j] += v[k] * m[j * 4 + k];
+			}
+		}
+
+	}
+
+	void renderCatmullRomCurve() {
+
+	// desenhar a curva usando segmentos de reta - GL_LINE_LOOP
+		glBegin(GL_LINE_LOOP);
+			float t;
+			for (t = 0; t < 1; t += 0.01) {
+				getGlobalCatmullRomPoint( t,pos,deriv );
+				glVertex3f( pos[0],pos[1],pos[2] );
+
+			}
+
+		glEnd();
+	}
+	void getCatmullRomPoint(float t, float *p0, float *p1, float *p2, float *p3, float *pos, float *deriv) {
+
+		// catmull-rom matrix
+		float m[4][4] = {	{-0.5f,  1.5f, -1.5f,  0.5f},
+							{ 1.0f, -2.5f,  2.0f, -0.5f},
+							{-0.5f,  0.0f,  0.5f,  0.0f},
+							{ 0.0f,  1.0f,  0.0f,  0.0f}
+						};
+
+		// Compute A = M * P
+
+		float a[4][4];
+
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+			{
+				a[i][j] = m[i][0] * p0[j] +
+							m[i][1] * p1[j] +
+							m[i][2] * p2[j] +
+							m[i][3] * p3[j];
+			}
+
+		// Compute pos = T * A
+
+		for (int i = 0; i < 4; i++)
+		{
+			pos[i] = a[0][i] * pow( t,3 ) +
+							 a[1][i] * pow( t,2 ) +
+							 a[2][i] * t +
+							 a[3][i];
+		}
+
+		// compute deriv = T' * A
+
+		for (int i = 0; i < 4; i++)
+		{
+			deriv[i] = a[0][i] * 3 * pow( t,2 ) +
+							 	 a[1][i] * 2 * t +
+							   a[2][i];
+		}
+	}
+
+	void getGlobalCatmullRomPoint(float gt,float* pos, float *deriv) {
+
+		int npoint = curvePoints.size()/3;
+		float p[npoint][4];
+		int j = 0;
+		for (int i = 0; i < curvePoints.size(); i+=3)
+		{
+			p[j][0] = curvePoints.at(i);
+			p[j][1] = curvePoints.at(i+1);
+			p[j][2] = curvePoints.at(i+2);
+			p[j][3] = 1;
+			j++;
+		}
+		float t = gt * npoint; // this is the real global t
+		int index = floor(t);  // which segment
+		t = t - index; // where within  the segment
+
+		// indices store the points
+		int indices[4];
+		indices[0] = (index + npoint-1)%npoint;
+		indices[1] = (indices[0]+1)%npoint;
+		indices[2] = (indices[1]+1)%npoint;
+		indices[3] = (indices[2]+1)%npoint;
+
+		getCatmullRomPoint(t, p[indices[0]], p[indices[1]], p[indices[2]], p[indices[3]], pos, deriv);
+	}
+
 
 	void apply(){
 		switch(type){
@@ -328,8 +458,21 @@ public:
 			case SCALE:
 				glScalef(x,y,z);
 				break;
-			case TRANSLATE_TIME:
+			case TRANSLATE_TIME:{
+				float tempo =glutGet(GLUT_ELAPSED_TIME);% (int)(time*1000);
+				renderCatmullRomCurve();
+				getGlobalCatmullRomPoint(timeNow,pos,deriv);
+				/*normalize( deriv );
+				cross( deriv,ys,zs );
+				normalize( zs );
+				cross( zs,deriv,ys );
+				normalize( ys );
+				buildRotMatrix( deriv,ys,zs,rotMatrix );*/
+				glTranslatef( pos[0],pos[1],pos[2]);
+				//glMultMatrixf( rotMatrix );
+
 				break;
+			}
 			case ROTATE_TIME:
 
 				float timeNow = glutGet(GLUT_ELAPSED_TIME);
@@ -545,10 +688,12 @@ public:
 	void getTranslatePoints(TiXmlElement* elem, Transformation* t){
 		double x,y,z;
 		for (TiXmlElement* e = elem->FirstChildElement(); e != NULL; e = e->NextSiblingElement()) {
+
 			if (strcmp(elem->Value(), "point") ) {
 				e->Attribute("X",&x);
 				e->Attribute("Y",&y);
 				e->Attribute("Z",&z);
+				
 				t->savePoint((float) x,(float) y,(float) z);
 			}
 		}
@@ -563,6 +708,11 @@ public:
 		elem->Attribute("Z",&z);
 
 		switch(type){
+			case TRANSLATE_TIME:
+
+				elem->Attribute("time",&time);
+				getTranslatePoints(elem,&t);
+				break;
 			case ROTATE:
 				elem->Attribute("axisX",&x);
 				elem->Attribute("axisY",&y);
@@ -575,10 +725,7 @@ public:
 				elem->Attribute("axisZ",&z);
 				elem->Attribute("time",&time);
 				break;
-			case TRANSLATE_TIME:
-				elem->Attribute("time",&time);
-				getTranslatePoints(elem,&t);
-
+			
 		}
 
 		t.setX((float)x);
@@ -601,15 +748,16 @@ public:
 
 
 		for (elem = groupElem->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement()) {
+
 			if (strcmp(elem->Value(), "translate") == 0 && translateFlag == 0) {
-				const char *isSpecialTranslate = elem->Attribute("time");
+				const char * isSpecialTranslate = elem->Attribute("time");
 				if (isSpecialTranslate) {
+
                     addTransformation(TRANSLATE_TIME,elem,currentGroup);
                 }
 				else{
 					addTransformation(TRANSLATE,elem,currentGroup);
 				}
-				//addTransformation(TRANSLATE,elem,currentGroup);
 				translateFlag++;
 			} else if (strcmp(elem->Value(), "rotate") == 0 && rotateFlag == 0) {
                 const char *isSpecialRotate = elem->Attribute("time");
@@ -648,7 +796,7 @@ public:
 	void registerLight(TiXmlElement * light){
 		double X=0,Y=0, Z=0;
 		const char * type = NULL;
-
+	
 		type = light->Attribute("type");
 		light->Attribute("X",&X);
 		light->Attribute("Y",&Y);
