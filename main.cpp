@@ -304,6 +304,11 @@ public:
 	void setTime(float time){this->time = time;}
 
 	vector<float> * getCurvePoints(){return &curvePoints;}
+	void savePoint(float x,float y, float z){
+		curvePoints.push_back(x);
+		curvePoints.push_back(y);
+		curvePoints.push_back(z);
+	}
 
 	float getX(){return x;}
 	float getY(){return y;}
@@ -322,6 +327,8 @@ public:
 				break;
 			case SCALE:
 				glScalef(x,y,z);
+				break;
+			case TRANSLATE_TIME:
 				break;
 			case ROTATE_TIME:
 
@@ -535,6 +542,18 @@ public:
 		models->push_back(model);
 	}
 
+	void getTranslatePoints(TiXmlElement* elem, Transformation* t){
+		double x,y,z;
+		for (TiXmlElement* e = elem->FirstChildElement(); e != NULL; e = e->NextSiblingElement()) {
+			if (strcmp(elem->Value(), "point") ) {
+				e->Attribute("X",&x);
+				e->Attribute("Y",&y);
+				e->Attribute("Z",&z);
+				t->savePoint((float) x,(float) y,(float) z);
+			}
+		}
+	}
+
 	void addTransformation(TransformationType type,TiXmlElement * elem,Group * currentGroup){
 		Transformation t = Transformation(type);
 		double x=0,y=0,z=0,time=0,angle=0;
@@ -556,6 +575,10 @@ public:
 				elem->Attribute("axisZ",&z);
 				elem->Attribute("time",&time);
 				break;
+			case TRANSLATE_TIME:
+				elem->Attribute("time",&time);
+				getTranslatePoints(elem,&t);
+
 		}
 
 		t.setX((float)x);
@@ -579,7 +602,14 @@ public:
 
 		for (elem = groupElem->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement()) {
 			if (strcmp(elem->Value(), "translate") == 0 && translateFlag == 0) {
-				addTransformation(TRANSLATE,elem,currentGroup);
+				const char *isSpecialTranslate = elem->Attribute("time");
+				if (isSpecialTranslate) {
+                    addTransformation(TRANSLATE_TIME,elem,currentGroup);
+                }
+				else{
+					addTransformation(TRANSLATE,elem,currentGroup);
+				}
+				//addTransformation(TRANSLATE,elem,currentGroup);
 				translateFlag++;
 			} else if (strcmp(elem->Value(), "rotate") == 0 && rotateFlag == 0) {
                 const char *isSpecialRotate = elem->Attribute("time");
