@@ -461,7 +461,7 @@ public:
 			case TRANSLATE_TIME:{
 				float tempo =glutGet(GLUT_ELAPSED_TIME);% (int)(time*1000);
 				renderCatmullRomCurve();
-				getGlobalCatmullRomPoint(timeNow,pos,deriv);
+				getGlobalCatmullRomPoint(time,pos,deriv);
 				/*normalize( deriv );
 				cross( deriv,ys,zs );
 				normalize( zs );
