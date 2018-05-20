@@ -459,7 +459,7 @@ public:
 				glScalef(x,y,z);
 				break;
 			case TRANSLATE_TIME:{
-				float tempo =glutGet(GLUT_ELAPSED_TIME);% (int)(time*1000);
+				float tempo =glutGet(GLUT_ELAPSED_TIME)% (int)(time*1000);
 				renderCatmullRomCurve();
 				getGlobalCatmullRomPoint(time,pos,deriv);
 				/*normalize( deriv );
