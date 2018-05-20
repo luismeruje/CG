@@ -33,20 +33,21 @@ using namespace std::tr1;
 #define ROTATE_TIME 3
 #define TRANSLATE_TIME 4
 #define TransformationType int
+#define TEXTURE_SPHERE 1
 
 using namespace std;
 
 float rotateHorizontal = -0.2;
 float rotateVertical = 0.5;
-int mode = GL_LINE;
+int mode = GL_FILL;
 float cameraDistance = 150;
 
-GLuint buffers[2];
+GLuint buffers[3];
 
 
 //Four doubles per light
 vector<double> posOrDirOfLights;
-float ambLight[4] = {0.8, 0.2, 0.2, 1.0};
+float ambLight[4] = {0.5, 0.5, 0.5, 1.0};
 float diffLight[4] = {1.0, 1.0, 1.0, 1.0};
 float posLight[4];
 int nrOfLights = 0;
@@ -89,6 +90,58 @@ void calculateNormals(vector<float> * vertexb, vector<float> * normalb){
 		normalb->push_back(n[0]);
 		normalb->push_back(n[1]);
 		normalb->push_back(n[2]);
+	}
+}
+
+void calculateTextureCoordinates(vector<float> * vertexb, vector<float> * textureb, int stacks, int slices){
+	float x, next_x, y, next_y, stack, slice;
+	for (slice = 0; slice < slices; slice++)
+		if (slice+1 != slices){
+			textureb->push_back(0.5); textureb->push_back(0.0);
+			textureb->push_back((1/(float)slices)*slice); textureb->push_back(0.0); 
+			textureb->push_back((1/(float)slices)*(slice+1));textureb->push_back(0.0);
+		}else{
+			textureb->push_back(0.5); textureb->push_back(0.0);
+			textureb->push_back((1/(float)slices)*(float)slice); textureb->push_back(0.0); 
+			textureb->push_back(1); textureb->push_back(0.0);
+		}
+	//Nested Loops para os calculos dos triangulos entre stacks em que nenhuma e um dos polos da esfera
+	if(stacks > 2){
+		for(stack = 1; stack < stacks; stack+= 1){
+			y = (1/(float)stacks) * stack;
+			next_y = (1/(float)stacks) * (stack+1);
+			for(slice = 0; slice < slices; slice += 1){
+				x = (1/(float)slices) * slice;
+				if (slice + 1 == slices){
+					next_x = 0;
+				}
+				else{
+					next_x = (1/(float)slices) * (slice + 1);
+				}
+				//1st triangle
+				textureb->push_back(x);textureb->push_back(y);
+				textureb->push_back(next_x);textureb->push_back(next_y);
+				textureb->push_back(next_x);textureb->push_back(y);
+				//2nd triangle
+				textureb->push_back(x);textureb->push_back(y);
+				textureb->push_back(x);textureb->push_back(next_y);
+				textureb->push_back(next_x);textureb->push_back(next_y);
+			}
+		}
+	}
+
+	//Entre ultima stack e polo y = +radius
+	for (x = 0; x < slices; x+= 1){
+		if (x+1 != slices){
+			textureb->push_back(0.5);textureb->push_back(1);
+			textureb->push_back((1/(float)slices)*(float)(x+1));textureb->push_back(1);
+			textureb->push_back((1/(float)slices)*(float)x);textureb->push_back(1);
+		}
+		else {
+			textureb->push_back(0.5);textureb->push_back(1);
+			textureb->push_back(1);textureb->push_back(1);
+			textureb->push_back((1/(float)slices)*(float)x);textureb->push_back(1);
+		}
 	}
 }
 
@@ -149,22 +202,42 @@ public:
 class Model{
 	vector<float> vertexb;
 	vector<float> normalb;
+	vector<float> textureb;
+	int textureID;
+	int textureType; 
+	//Considering that textures are always of sphere
+	//TODO: create class texture?
+	int stacks;
+	int slices;
 	MaterialLightProperties lightProperties;
 
 public:
 	Model(MaterialLightProperties lightProperties){
-		//Bad idea to pass vector of points as argument,
-		//Could imply making copy of all coordinates.
 
 		this->lightProperties = lightProperties;
-
+		this->textureID = -1;
+		this->textureType = -1;
+		this->stacks = -1;
+		this->slices = -1;
 	}
 
 	vector<float> * getVertexb(){return &vertexb;}
 
+	void setTextureID(int textureID){this->textureID = textureID;}
+	void setTextureType(int textureType){this->textureType = textureType;}
+	void setStacks(int stacks){this->stacks = stacks;}
+	void setSlices(int slices){this->slices = slices;}
+
 	void draw(){
-		calculateNormals(&vertexb,&normalb);
+		if(normalb.size()== 0){
+			calculateNormals(&vertexb,&normalb);
+		}
+
+		if(textureb.size()==0 && textureID != -1){
+			calculateTextureCoordinates(&vertexb,&textureb,stacks,slices);
+		}
 		
+
 
 		float spec[4], em[4],diff[4],amb[4];
 		diff[3] = 1.0; amb[3] = 1.0; spec[3] = 1.0; em[3] = 1.0;
@@ -190,7 +263,21 @@ public:
 		glBufferData(GL_ARRAY_BUFFER,sizeof(float) * normalb.size(),&(normalb[0]),GL_STATIC_DRAW);
 		glNormalPointer(GL_FLOAT, 0, 0);
 
+		if(textureb.size() == 0){
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glTexCoordPointer(2,GL_FLOAT,0,0);
+		}
+		else{
+			glBindTexture(GL_TEXTURE_2D,textureID);
+			glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
+			glBufferData(GL_ARRAY_BUFFER,sizeof(float) * textureb.size(),&(textureb[0]),GL_STATIC_DRAW);
+			glTexCoordPointer(2,GL_FLOAT,0,0);
+
+		}
+
+
 		glDrawArrays(GL_TRIANGLES, 0, vertexb.size()/3);
+		glBindTexture(GL_TEXTURE_2D,0);
 
 	}
 };
@@ -239,7 +326,7 @@ public:
 			case ROTATE_TIME:
 
 				float timeNow = glutGet(GLUT_ELAPSED_TIME);
-				angle = timeNow * ((2 * M_PI) / (time * 1000));
+				angle = timeNow * ((360) / (time * 1000));
 				glRotatef(angle,x,y,z);
 				break;
 		}
@@ -289,34 +376,91 @@ public:
 };
 
 
-vector<Group *> rootGroups;
+	vector<Group *> rootGroups;
 
 
 
-void changeSize(int w, int h) {
+	void changeSize(int w, int h) {
 
-	// Prevent a divide by zero, when window is too short
-	// (you cant make a window with zero width).
-	if(h == 0)
-		h = 1;
+		// Prevent a divide by zero, when window is too short
+		// (you cant make a window with zero width).
+		if(h == 0)
+			h = 1;
 
-	// compute window'angleSin aspect ratio
-	float ratio = w * 1.0 / h;
+		// compute window'angleSin aspect ratio
+		float ratio = w * 1.0 / h;
 
-	// Set the projection matrix as current
-	glMatrixMode(GL_PROJECTION);
-	// Load Identity Matrix
-	glLoadIdentity();
+		// Set the projection matrix as current
+		glMatrixMode(GL_PROJECTION);
+		// Load Identity Matrix
+		glLoadIdentity();
 
-	// Set the viewport to be the entire window
-    glViewport(0, 0, w, h);
+		// Set the viewport to be the entire window
+	    glViewport(0, 0, w, h);
 
-	// Set perspective
-	gluPerspective(45.0f ,ratio, 1.0f ,1000.0f);
+		// Set perspective
+		gluPerspective(45.0f ,ratio, 1.0f ,1000.0f);
 
-	// return to the model view matrix mode
-	glMatrixMode(GL_MODELVIEW);
-}
+		// return to the model view matrix mode
+		glMatrixMode(GL_MODELVIEW);
+	}
+
+	int loadTexture(std::string s) {
+
+		unsigned int t,tw,th;
+		unsigned char *texData;
+		unsigned int texID;
+
+		ilInit();
+		ilEnable(IL_ORIGIN_SET);
+		ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
+		ilGenImages(1,&t);
+		ilBindImage(t);
+		ilLoadImage((ILstring)s.c_str());
+		tw = ilGetInteger(IL_IMAGE_WIDTH);
+		th = ilGetInteger(IL_IMAGE_HEIGHT);
+		ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+		texData = ilGetData();
+
+		glGenTextures(1,&texID);
+		
+		glBindTexture(GL_TEXTURE_2D,texID);
+		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_WRAP_S,		GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_WRAP_T,		GL_REPEAT);
+
+		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MAG_FILTER,   	GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		return texID;
+
+	}
+
+	void setTexture(Model * model, TiXmlElement * elem){
+		int textureID = -1, stacks = -1, slices = -1;
+		const char * type = NULL, * textureName = NULL;
+
+		textureName = elem->Attribute("texture");
+		type = elem->Attribute("type");
+		elem->Attribute("stacks",&stacks);
+		elem->Attribute("slices",&slices);
+
+		if(stacks > 0 && slices > 0 && type != NULL){
+			if(!strcmp(type,"sphere")){
+				textureID = loadTexture(string(textureName));
+				if(textureID != -1){
+					model->setTextureID(textureID);
+					model->setStacks(stacks);
+					model->setSlices(slices);
+					model->setTextureType(TEXTURE_SPHERE);
+				}
+			}
+		}
+	}
 
 	void setMaterialLightPropertiesValues(MaterialLightProperties * properties,TiXmlElement * model){
 		double paramValue;
@@ -368,7 +512,9 @@ void changeSize(int w, int h) {
 
 		setMaterialLightPropertiesValues(&properties,elem);
 
+
 		Model model = Model(properties);
+		setTexture(&model,elem);
 		vector<float> * vertexb = model.getVertexb();
 
 
@@ -620,13 +766,18 @@ void changeSize(int w, int h) {
 	}
 
 
+
+
 	void initGL() {
 		//  OpenGL settings
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
+		glEnable(GL_TEXTURE_2D);
+
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
-		glGenBuffers(2, buffers);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glGenBuffers(3, buffers);
 
 		if(nrOfLights > 0)
 			glEnable(GL_LIGHTING);

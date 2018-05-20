@@ -1,18 +1,18 @@
 <scene>
 	<lights>
-		<light type = "POINT" X=0 Y=0 Z=0 />
-	</lights>
+        	<light type = "POINT" X=0 Y=0 Z=0 />
+        </lights>
 	<!-- Sun -->
 	<group>
 		<models>
-			<model file="sphere.3d" />
+			<model file="sphere.3d" emR=0.8 emG=0.8 emB=0.8  texture="sunmap.jpg" slices=50 stacks=50 type="sphere" />
 		</models>
 		<!-- Mercury -->
 		<group>
 			<translate X=28 Y=0 Z=0 />
 			<scale X=0.0361 Y=0.0361 Z=0.0361 />
 			<models>
-				<model file="sphere.3d" diffR=0.8 diffG=0.8 diffB=0.2 ambR=0.8 ambG=0.8 ambB=0.2 />
+				<model file="sphere.3d" texture="mercurymap.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 		</group>
 
@@ -21,15 +21,16 @@
 			<translate X=30.31 Y=0 Z=-17.5 />
 			<scale X=0.0885 Y=0.0885 Z=0.0885 />
 			<models>
-				<model file="sphere.3d" diffR=0.8 diffG=0.8 diffB=0.2 />
+				<model file="sphere.3d" texture="venusmap.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 		</group>
 		<!-- Earth -->
 		<group>
 			<translate X=39.7 Y=0 Z=21.1 />
+			<rotate time=10 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.09259 Y=0.09259 Z=0.09259 />
 			<models>
-				<model file="sphere.3d" diffR=0.2 diffG=0.8 diffB=0.2 />
+				<model file="sphere.3d" texture="earthmap1k.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 			<!-- Earth Moon -->
 			<group>
@@ -46,7 +47,7 @@
 			<translate X=9.9 Y=0 Z=56.1 />
 			<scale X=0.04808 Y=0.04808 Z=0.04808 />
 			<models>
-				<model file="sphere.3d" />
+				<model file="sphere.3d" texture="mars_1k_color.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 		</group>
 		<!-- Jupiter -->
@@ -54,7 +55,7 @@
 			<translate X=-42.5 Y=0 Z=-73.6 />
 			<scale X=0.6 Y=0.6 Z=0.6 />
 			<models>
-				<model file="sphere.3d" diffR=0.8 diffG=0.2 diffB=0.2 />
+				<model file="sphere.3d" texture="jupitermap.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 
 			<!-- Io (Jupiter Moon) -->
@@ -91,7 +92,7 @@
 		 	<translate X=0 Y=0 Z=-130 />
 			<scale X=0.5 Y=0.5 Z=0.5 />
 			<models>
-				<model file="sphere.3d" />
+				<model file="sphere.3d" texture="saturnmap.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 			<!-- Lapetuus (Saturn Moon) -->
 			<group>
@@ -122,6 +123,7 @@
 			</group>
 			<group>
 				<scale X=45 Y=45 Z=45 />
+				<rotate angle=15 axisX=1 axisY=0 axisZ=0 />
 				<models>
 					<model file="disc.3d" ambR=0.8/>
 				</models>
@@ -133,7 +135,7 @@
 			<translate X=138.56 Y=0 Z=80 />
 			<scale X=0.37313 Y=0.37313 Z=0.37313 />
 			<models>
-				<model file="sphere.3d" />
+				<model file="sphere.3d" texture="uranusmap.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 
 			<!-- Miranda (Uranus Moon) -->
@@ -179,7 +181,7 @@
 			<translate X=-74.9 Y=0 Z=-185.4 />
 			<scale X=0.36101 Y=0.36101 Z=0.36101 />
 			<models>
-				<model file="sphere.3d" />
+				<model file="sphere.3d" texture="neptunemap.jpg" slices=50 stacks=50 type="sphere" />
 			</models>
 
 			<!-- Triton (Neptune Moon) -->
