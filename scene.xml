@@ -9,7 +9,16 @@
 		</models>
 		<!-- Mercury -->
 		<group>
-			<translate X=28 Y=0 Z=0 />
+			<translate time=10 >
+				<point X=28 Y=0 Z=0 />
+				<point X=18 Y=0 Z=18 />
+				<point X=0 Y=0 Z=28 />
+				<point X=-18 Y=0 Z=18 />
+				<point X=-28 Y=0 Z=0 />
+				<point X=-18 Y=0 Z=-18 />
+				<point X=0 Y=0 Z=-28 />
+				<point X=18 Y=0 Z=-18 />
+			</translate>
 			<scale X=0.0361 Y=0.0361 Z=0.0361 />
 			<models>
 				<model file="sphere.3d" texture="mercurymap.jpg" slices=50 stacks=50 type="sphere" />

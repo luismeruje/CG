@@ -377,6 +377,7 @@ public:
 
 		glEnd();
 	}
+
 	void getCatmullRomPoint(float t, float *p0, float *p1, float *p2, float *p3, float *pos, float *deriv) {
 
 		// catmull-rom matrix
@@ -419,7 +420,7 @@ public:
 		}
 	}
 
-	void getGlobalCatmullRomPoint(float gt,float* pos, float *deriv) {
+	void getGlobalCatmullRomPoint(float time,float* pos, float *deriv) {
 
 		int npoint = curvePoints.size()/3;
 		float p[npoint][4];
@@ -432,7 +433,7 @@ public:
 			p[j][3] = 1;
 			j++;
 		}
-		float t = gt * npoint; // this is the real global t
+		float t = time * npoint; // this is the real global t
 		int index = floor(t);  // which segment
 		t = t - index; // where within  the segment
 
@@ -459,15 +460,18 @@ public:
 				glScalef(x,y,z);
 				break;
 			case TRANSLATE_TIME:{
-				float tempo =glutGet(GLUT_ELAPSED_TIME)% (int)(time*1000);
+				float gt =glutGet(GLUT_ELAPSED_TIME) % (int)(time*1000);
+				float t = gt/(time*1000);
 				renderCatmullRomCurve();
-				getGlobalCatmullRomPoint(time,pos,deriv);
+				getGlobalCatmullRomPoint(t,pos,deriv);
 				/*normalize( deriv );
 				cross( deriv,ys,zs );
 				normalize( zs );
 				cross( zs,deriv,ys );
 				normalize( ys );
 				buildRotMatrix( deriv,ys,zs,rotMatrix );*/
+
+				//printf("time: %f\n Point: %f,%f,%f\n",tempo, pos[0],pos[1],pos[2]);
 				glTranslatef( pos[0],pos[1],pos[2]);
 				//glMultMatrixf( rotMatrix );
 
