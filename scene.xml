@@ -9,16 +9,17 @@
 		</models>
 		<!-- Mercury -->
 		<group>
-			<translate time=10 >
+			<translate time=8 >
 				<point X=28 Y=0 Z=0 />
-				<point X=18 Y=0 Z=18 />
+				<point X=20 Y=0 Z=20 />
 				<point X=0 Y=0 Z=28 />
-				<point X=-18 Y=0 Z=18 />
+				<point X=-20 Y=0 Z=20 />
 				<point X=-28 Y=0 Z=0 />
-				<point X=-18 Y=0 Z=-18 />
+				<point X=-20 Y=0 Z=-20 />
 				<point X=0 Y=0 Z=-28 />
-				<point X=18 Y=0 Z=-18 />
+				<point X=20 Y=0 Z=-20 />
 			</translate>
+			<rotate time=57 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.0361 Y=0.0361 Z=0.0361 />
 			<models>
 				<model file="sphere.3d" texture="mercurymap.jpg" slices=50 stacks=50 type="sphere" />
@@ -27,7 +28,17 @@
 
 		<!-- Venus -->
 		<group>
-			<translate X=30.31 Y=0 Z=-17.5 />
+			<translate time=22>
+				<point X=0 Y=0 Z=-35 />
+				<point X=24.75 Y=0 Z=-24.75 />
+				<point X=35 Y=0 Z=0 />
+				<point X=24.75 Y=0 Z=24.75 />
+				<point X=0 Y=0 Z=35 />
+				<point X=-24.75 Y=0 Z=24.75 />
+				<point X=-35 Y=0 Z=0 />
+				<point X=-24.75 Y=0 Z=-24.75 />
+			</translate>
+			<rotate time=243 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.0885 Y=0.0885 Z=0.0885 />
 			<models>
 				<model file="sphere.3d" texture="venusmap.jpg" slices=50 stacks=50 type="sphere" />
@@ -35,8 +46,17 @@
 		</group>
 		<!-- Earth -->
 		<group>
-			<translate X=39.7 Y=0 Z=21.1 />
-			<rotate time=10 axisX=0 axisY=1 axisZ=0 />
+			<translate time=36>
+				<point X=45 Y=0 Z=0 />
+				<point X=31.82 Y=0 Z=31.82 />
+				<point X=0 Y=0 Z=45 />
+				<point X=-31.82 Y=0 Z=31.82 />
+				<point X=-45 Y=0 Z=0 />
+				<point X=-31.82 Y=0 Z=-31.82 />
+				<point X=0 Y=0 Z=-45 />
+				<point X=31.82 Y=0 Z=-31.82 />
+			</translate>
+			<rotate time=1 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.09259 Y=0.09259 Z=0.09259 />
 			<models>
 				<model file="sphere.3d" texture="earthmap1k.jpg" slices=50 stacks=50 type="sphere" />
@@ -53,7 +73,17 @@
 		</group>
 		<!-- Mars -->
 		<group>
-			<translate X=9.9 Y=0 Z=56.1 />
+			<translate time=68>
+				<point X=57 Y=0 Z=0 />
+				<point X=40.31 Y=0 Z=40.31 />
+				<point X=0 Y=0 Z=57 />
+				<point X=-40.31 Y=0 Z=40.31 />
+				<point X=-57 Y=0 Z=0 />
+				<point X=-40.31 Y=0 Z=-40.31 />
+				<point X=0 Y=0 Z=-57 />
+				<point X=40.31 Y=0 Z=-40.31 />
+			</translate>
+			<rotate time=1.01 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.04808 Y=0.04808 Z=0.04808 />
 			<models>
 				<model file="sphere.3d" texture="mars_1k_color.jpg" slices=50 stacks=50 type="sphere" />
@@ -61,7 +91,17 @@
 		</group>
 		<!-- Jupiter -->
 		<group>
-			<translate X=-42.5 Y=0 Z=-73.6 />
+			<translate time=250>
+				<point X=85 Y=0 Z=0 />
+				<point X=60.10 Y=0 Z=60.10 />
+				<point X=0 Y=0 Z=85 />
+				<point X=-60.10 Y=0 Z=60.10 />
+				<point X=-85 Y=0 Z=0 />
+				<point X=-60.10 Y=0 Z=-60.10 />
+				<point X=0 Y=0 Z=-85 />
+				<point X=60.10 Y=0 Z=-60.10 />
+			</translate>
+			<rotate time=0.45 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.6 Y=0.6 Z=0.6 />
 			<models>
 				<model file="sphere.3d" texture="jupitermap.jpg" slices=50 stacks=50 type="sphere" />
@@ -98,7 +138,17 @@
 		</group>
 		<!-- Saturn -->
 		<group>
-		 	<translate X=0 Y=0 Z=-130 />
+		 	<translate time=700>
+				<point X=130 Y=0 Z=0 />
+				<point X=91.92 Y=0 Z=91.92 />
+				<point X=0 Y=0 Z=130 />
+				<point X=-91.92 Y=0 Z=91.92 />
+				<point X=-130 Y=0 Z=0 />
+				<point X=-91.92 Y=0 Z=-91.92 />
+				<point X=0 Y=0 Z=-130 />
+				<point X=91.92 Y=0 Z=-91.92 />
+			</translate>
+			<rotate time=0.46 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.5 Y=0.5 Z=0.5 />
 			<models>
 				<model file="sphere.3d" texture="saturnmap.jpg" slices=50 stacks=50 type="sphere" />
@@ -141,7 +191,17 @@
 		</group>
 		<!-- Uranus -->
 		<group>
-			<translate X=138.56 Y=0 Z=80 />
+			<translate time=550>
+				<point X=160 Y=0 Z=0 />
+				<point X=113.14 Y=0 Z=113.14 />
+				<point X=0 Y=0 Z=160 />
+				<point X=-113.14 Y=0 Z=113.14 />
+				<point X=-160 Y=0 Z=0 />
+				<point X=-113.14 Y=0 Z=-113.14 />
+				<point X=0 Y=0 Z=-160 />
+				<point X=113.14 Y=0 Z=-113.14 />
+			</translate>
+			<rotate time=0.7 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.37313 Y=0.37313 Z=0.37313 />
 			<models>
 				<model file="sphere.3d" texture="uranusmap.jpg" slices=50 stacks=50 type="sphere" />
@@ -169,7 +229,7 @@
 			<group>
 				<scale X=0.05 Y=0.05 Z=0.05 />
 				<translate X=83 Y=2 Z=0 />
-				<rotate angle=45 axisX=0 axisY=1 axisZ=0 />
+				<rotate angle=200 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
 				</models>
@@ -177,9 +237,18 @@
 		</group>
 		<!-- Comet -->
 		<group>
-		     <scale X=0.2 Y=0.2 Z=0.2 />
-		     <translate X=55 Y=0 Z=0 />
-		     <rotate time=5 axisX=0 axisY=1 axisZ=0 />
+			 <translate time=100>
+				<point X=170 Y=0 Z=0 />
+				<point X=123.14 Y=0 Z=73.14 />
+				<point X=0 Y=0 Z=100 />
+				<point X=-123.14 Y=0 Z=73.14 />
+				<point X=-170 Y=0 Z=0 />
+				<point X=-123.14 Y=0 Z=-73.14 />
+				<point X=0 Y=0 Z=-100 />
+				<point X=123.14 Y=0 Z=-73.14 />
+			</translate>
+		     <rotate time=100 axisX=0 axisY=1 axisZ=0 />
+		     <scale X=0.25 Y=0.25 Z=0.25 />
 		     <models>
            		 <model file="cometa.3d" diffR=0.2 diffG=0.8 diffB=0.2 />
 		     </models>
@@ -187,7 +256,17 @@
 
 		<!-- Neptune -->
 		<group>
-			<translate X=-74.9 Y=0 Z=-185.4 />
+			<translate time=500>
+				<point X=200 Y=0 Z=0 />
+				<point X=141.42 Y=0 Z=141.42 />
+				<point X=0 Y=0 Z=200 />
+				<point X=-141.42 Y=0 Z=141.42 />
+				<point X=-200 Y=0 Z=0 />
+				<point X=-141.42 Y=0 Z=-141.42 />
+				<point X=0 Y=0 Z=-200 />
+				<point X=141.42 Y=0 Z=-141.42 />
+			</translate>
+			<rotate time=0.65 axisX=0 axisY=1 axisZ=0 />
 			<scale X=0.36101 Y=0.36101 Z=0.36101 />
 			<models>
 				<model file="sphere.3d" texture="neptunemap.jpg" slices=50 stacks=50 type="sphere" />
