@@ -64,7 +64,7 @@
 			<!-- Earth Moon -->
 			<group>
 				<scale X=0.1875 Y=0.1875 Z=0.1875 />
-				<translate X=40 Y=2 Z=0 />
+				<translate X=-250 Y=20 Z=0 />
 				<rotate angle=120 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -110,7 +110,7 @@
 			<!-- Io (Jupiter Moon) -->
 			<group>
 				<scale X=0.09375 Y=0.09375 Z=0.09375 />
-				<translate X=75 Y=2 Z=0 />
+				<translate X=400 Y=60 Z=0 />
 				<rotate angle=240 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -120,7 +120,7 @@
 			<!-- Ganímedes (Jupiter Moon) -->
 			<group>
 				<scale X=0.135 Y=0.135 Z=0.135 />
-				<translate X=55 Y=2 Z=0 />
+				<translate X=-230 Y=70 Z=50 />
 				<rotate angle=240 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -129,7 +129,7 @@
 			<!-- Europa (Jupiter Moon) -->
 			<group>
 				<scale X=0.08 Y=0.08 Z=0.08 />
-				<translate X=75 Y=-2 Z= 10 />
+				<translate X=-310 Y=-50 Z= -100 />
 				<rotate angle=240 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -156,7 +156,7 @@
 			<!-- Lapetuus (Saturn Moon) -->
 			<group>
 				<scale X=0.06 Y=0.06 Z=0.06 />
-				<translate X=3000 Y=2 Z=0 />
+				<translate X=650 Y=-100 Z=40 />
 				<rotate angle=180 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -165,7 +165,7 @@
 			<!-- Titan (Saturn Moon) -->
 			<group>
 			<scale X=0.21 Y=0.21 Z=0.21 />
-				<translate X=95 Y=6 Z=0 />
+				<translate X=-150 Y=50 Z=-30 />
 				<rotate angle=180 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -174,7 +174,7 @@
 			<!-- Enceladus (Saturn Moon) -->
 			<group>
 				<scale X=0.02 Y=0.02 Z=0.02 />
-				<translate X=80 Y=0 Z=30 />
+				<translate X=2050 Y=500 Z=30 />
 				<rotate angle=180 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -210,7 +210,7 @@
 			<!-- Miranda (Uranus Moon) -->
 			<group>
 				<scale X=0.01666 Y=0.01666 Z=0.01666 />
-				<translate X=110 Y=2 Z=0 />
+				<translate X=1900 Y=-500 Z=0 />
 				<rotate angle=45 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -219,7 +219,7 @@
 			<!-- Oberon (Uranus Moon) -->
 			<group>
 				<scale X=0.05 Y=0.05 Z=0.05 />
-				<translate X=88 Y=2 Z=0 />
+				<translate X=-600 Y=150 Z=0 />
 				<rotate angle=40 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -228,7 +228,7 @@
 			<!-- Umbriel (Uranus Moon) -->
 			<group>
 				<scale X=0.05 Y=0.05 Z=0.05 />
-				<translate X=83 Y=2 Z=0 />
+				<translate X=600 Y=2 Z=200 />
 				<rotate angle=200 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
@@ -275,7 +275,7 @@
 			<!-- Triton (Neptune Moon) -->
 			<group>
 				<scale X=0.09166 Y=0.09166 Z=0.09166 />
-				<translate X=128 Y=3 Z=0 />
+				<translate X=380 Y=3 Z=0 />
 				<rotate angle=270 axisX=0 axisY=1 axisZ=0 />
 				<models>
 					<model file="sphere.3d" />
