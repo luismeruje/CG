@@ -89,7 +89,7 @@ void calculateNormals(vector<float> * vertexb, vector<float> * normalb){
 	}
 }
 
-void calculateTextureCoordinates(vector<float> * vertexb, vector<float> * textureb, int stacks, int slices){
+void calculateSphereTextureCoordinates(vector<float> * vertexb, vector<float> * textureb, int stacks, int slices){
 	float x, next_x, y, next_y, stack, slice;
 	for (slice = 0; slice < slices; slice++)
 		if (slice+1 != slices){
@@ -360,7 +360,7 @@ public:
 		}
 
 		if(textureb.size()==0 && textureID != -1){
-			calculateTextureCoordinates(&vertexb,&textureb,stacks,slices);
+			calculateSphereTextureCoordinates(&vertexb,&textureb,stacks,slices);
 		}
 
 
