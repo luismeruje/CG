@@ -1,5 +1,5 @@
 #include<stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -54,7 +54,7 @@ int nrOfLights = 0;
 
 
 
-//WARNING: Princípios de encapsulamento não foram aplicados por ser um programa simples e para aumentar performance. 
+//WARNING: Princípios de encapsulamento não foram aplicados por ser um programa simples e para aumentar performance.
 //São passadas referências de objetos entre funções e não cópias.
 //TODO: destroy method's
 
@@ -98,11 +98,11 @@ void calculateTextureCoordinates(vector<float> * vertexb, vector<float> * textur
 	for (slice = 0; slice < slices; slice++)
 		if (slice+1 != slices){
 			textureb->push_back(0.5); textureb->push_back(0.0);
-			textureb->push_back((1/(float)slices)*slice); textureb->push_back(0.0); 
+			textureb->push_back((1/(float)slices)*slice); textureb->push_back(0.0);
 			textureb->push_back((1/(float)slices)*(slice+1));textureb->push_back(0.0);
 		}else{
 			textureb->push_back(0.5); textureb->push_back(0.0);
-			textureb->push_back((1/(float)slices)*(float)slice); textureb->push_back(0.0); 
+			textureb->push_back((1/(float)slices)*(float)slice); textureb->push_back(0.0);
 			textureb->push_back(1); textureb->push_back(0.0);
 		}
 	//Nested Loops para os calculos dos triangulos entre stacks em que nenhuma e um dos polos da esfera
@@ -112,12 +112,12 @@ void calculateTextureCoordinates(vector<float> * vertexb, vector<float> * textur
 			next_y = (1/(float)stacks) * (stack+1);
 			for(slice = 0; slice < slices; slice += 1){
 				x = (1/(float)slices) * slice;
-				if (slice + 1 == slices){
-					next_x = 0;
-				}
-				else{
-					next_x = (1/(float)slices) * (slice + 1);
-				}
+				// if (slice + 1 == slices){
+				// 	next_x = 0;
+				// }
+				// else{
+				next_x = (1/(float)slices) * (slice + 1);
+				// }
 				//1st triangle
 				textureb->push_back(x);textureb->push_back(y);
 				textureb->push_back(next_x);textureb->push_back(next_y);
@@ -158,7 +158,7 @@ public:
 
 		//Almost white
 		this->ambR=0.2; this->ambG=0.2; this->ambB=0.2;
-		
+
 		//Almost black
 		this->diffR=0.8; this->diffG=0.8; this->diffB=0.8;
 
@@ -204,7 +204,7 @@ class Model{
 	vector<float> normalb;
 	vector<float> textureb;
 	int textureID;
-	int textureType; 
+	int textureType;
 	//Considering that textures are always of sphere
 	//TODO: create class texture?
 	int stacks;
@@ -236,7 +236,7 @@ public:
 		if(textureb.size()==0 && textureID != -1){
 			calculateTextureCoordinates(&vertexb,&textureb,stacks,slices);
 		}
-		
+
 
 
 		float spec[4], em[4],diff[4],amb[4];
@@ -454,9 +454,9 @@ public:
 		}
 
 		vector<Group *>::iterator subGroupsIt;
-		for(i = 0,subGroupsIt = subGroups.begin(); subGroupsIt != subGroups.end(); subGroupsIt++,i++){	
+		for(i = 0,subGroupsIt = subGroups.begin(); subGroupsIt != subGroups.end(); subGroupsIt++,i++){
 			subGroups.at(i)->drawGroupAndSubGroups();
-			
+
 		}
 		glPopMatrix();
 	}
@@ -464,7 +464,7 @@ public:
 	void addTransformation(Transformation t){
 		transformations.push_back(t);
 	}
-	
+
 };
 
 
@@ -515,14 +515,14 @@ public:
 		texData = ilGetData();
 
 		glGenTextures(1,&texID);
-		
+
 		glBindTexture(GL_TEXTURE_2D,texID);
 		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_WRAP_S,		GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_WRAP_T,		GL_REPEAT);
 
 		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MAG_FILTER,   	GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			
+
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -635,7 +635,7 @@ public:
 				e->Attribute("X",&x);
 				e->Attribute("Y",&y);
 				e->Attribute("Z",&z);
-				
+
 				t->savePoint((float) x,(float) y,(float) z);
 			}
 		}
@@ -667,7 +667,7 @@ public:
 				elem->Attribute("axisZ",&z);
 				elem->Attribute("time",&time);
 				break;
-			
+
 		}
 
 		t.setX((float)x);
@@ -722,7 +722,7 @@ public:
                 for (elem = elem->FirstChildElement("model"); elem != NULL; elem = elem->NextSiblingElement("model")) {
                     addModel(elem, models);
                 }
-            
+
 		}
 
 		// Other groups
@@ -738,7 +738,7 @@ public:
 	void registerLight(TiXmlElement * light){
 		double X=0,Y=0, Z=0;
 		const char * type = NULL;
-	
+
 		type = light->Attribute("type");
 		light->Attribute("X",&X);
 		light->Attribute("Y",&Y);
@@ -765,7 +765,7 @@ public:
 
 
 	}
-	
+
 
 	void loadXML(const char *xmlFile) {
 		TiXmlDocument doc(xmlFile);
@@ -783,7 +783,7 @@ public:
 				}
 				for (TiXmlElement *groupElem = root->FirstChildElement("group");
 					 groupElem != NULL; groupElem = groupElem->NextSiblingElement("group")){
-					
+
 					Group * rootGroup = new Group();
 					rootGroups.push_back(rootGroup);
 					loadGroupFromXML(groupElem,rootGroup);
@@ -858,7 +858,7 @@ public:
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 
-		
+
 		for(i = 0; i < nrOfLights; i++){
 			posLight[0] = posOrDirOfLights.at(i*4+0);
 			posLight[1] = posOrDirOfLights.at(i*4+1);
@@ -871,7 +871,7 @@ public:
 			glLightfv(GL_LIGHT0+i, GL_POSITION, posLight);
 			glLightfv(GL_LIGHT0+i, GL_AMBIENT, ambLight);
 			glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffLight);
-		}		
+		}
 		glColor3f(1.0, 1.0, 0.5);
 		vector<Group *>::iterator rootGroupsIt;
 
