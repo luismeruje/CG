@@ -1,0 +1,17 @@
+<scene>
+	<lights>
+    <light type = "SPOT" X=0 Y=0 Z=0 dirX=1 dirY=0 dirZ=0 cutoff=90 />
+  </lights>
+  <group>
+    <translate X=50 />
+    <models>	  
+      <model file="sphere.3d" texture="earthmap1k.jpg" slices=50 stacks=50 type="sphere" />
+    </models>
+  </group>
+  <group>
+       <translate X=-50 />
+       <models>
+         <model file="sphere.3d" texture="earthmap1k.jpg" slices=50 stacks=50 type="sphere" />
+       </models>
+  </group>
+</scene>

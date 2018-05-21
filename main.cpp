@@ -1083,7 +1083,7 @@ public:
 		vector<Light>::iterator lightIt;
 		int i;
 		for(i = 0, lightIt = lights.begin();lightIt != lights.end(); lightIt++,i++){
-			printf("Light %d: \n\ttype:%d\tposOrDir(%f,%f,%f)\n",i,lightIt->getType(),lightIt->getPosOrDirX(),lightIt->getPosOrDirY(),lightIt->getPosOrDirZ());
+			printf("Light %d: \n\ttype:%d\tposOrDir(%f,%f,%f)\nexponent:%f\n",i,lightIt->getType(),lightIt->getPosOrDirX(),lightIt->getPosOrDirY(),lightIt->getPosOrDirZ(),lightIt->getSpotExponent());
 		}
 
 		//Initialize OpenGL
