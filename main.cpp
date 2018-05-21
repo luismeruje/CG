@@ -26,7 +26,9 @@ using namespace std::tr1;
 #include <iostream>
 #include <limits>
 
-
+#define POINT 0
+#define DIRECTIONAL 1
+#define SPOT 2
 #define ROTATE 0
 #define TRANSLATE 1
 #define SCALE 2
@@ -45,12 +47,6 @@ float cameraDistance = 150;
 GLuint buffers[3];
 
 
-//Four doubles per light
-vector<double> posOrDirOfLights;
-float ambLight[4] = {0.5, 0.5, 0.5, 1.0};
-float diffLight[4] = {1.0, 1.0, 1.0, 1.0};
-float posLight[4];
-int nrOfLights = 0;
 
 
 
@@ -144,6 +140,136 @@ void calculateTextureCoordinates(vector<float> * vertexb, vector<float> * textur
 		}
 	}
 }
+
+class Light
+{
+	int type;
+	float diffR, diffG, diffB;
+	float ambR, ambG, ambB;
+	float specR, specG, specB;
+ 	float posOrDirX, posOrDirY, posOrDirZ;
+	float spotDirX, spotDirY, spotDirZ;
+	float spotExponent[1];
+	float spotCutoff[1];
+	float constAttenuation[1];
+	float linAttenuation[1];
+	float quadAttenuation[1];
+
+public:
+	Light(){
+		//DEFAULT values
+		this->ambR=0.5; this->ambG=0.5; this->ambB=0.5;
+
+		this->diffR=1; this->diffG=1; this->diffB=1;
+
+		this->specR=0; this->specG=0; this->specB=0;
+
+		this->posOrDirX = 0; this->posOrDirY = 0; this->posOrDirZ = 0;
+
+		this->spotDirX = 0; this->spotDirY = 0; this->spotDirZ = 1;
+
+		this->spotExponent[0] = 0;
+
+		this->spotCutoff[0] = 180;
+
+		this->constAttenuation[0] = 1;
+
+		this->linAttenuation[0] = 0;
+
+		this->quadAttenuation[0] = 0;
+
+	}
+
+	int setType(int type){
+		if(type < 3 && type > -1){
+			this->type = type;
+			return 1;
+		}
+		else
+			return -1;
+	}
+	void setAmbR(float ambR){this->ambR = ambR;} void setAmbG(float ambG){this->ambG = ambG;} void setAmbB(float ambB){this->ambB = ambB;}
+	void setDiffR(float diffR){this->diffR = diffR;} void setDiffG(float diffG){this->diffG = diffG;} void setDiffB(float diffB){this->diffB = diffB;}
+	void setSpecR(float specR){this->specR = specR;} void setSpecG(float specG){this->specG = specG;} void setSpecB(float specB){this->specB = specB;}
+	void setPosOrDirX(float posOrDirX){this->posOrDirX = posOrDirX;} void setPosOrDirY(float posOrDirY){this->posOrDirY = posOrDirY;} void setPosOrDirZ(float posOrDirZ){this->posOrDirZ = posOrDirZ;}
+	void setSpotDirX(float spotDirX){this->spotDirX = spotDirX;} void setSpotDirY(float spotDirY){this->spotDirY = spotDirY;} void setSpotDirZ(float spotDirZ){this->spotDirZ = spotDirZ;} 
+	int setSpotExponent(float spotExponent){
+		if(spotExponent <= 128 && spotExponent >= 0){
+			this->spotExponent[0] = spotExponent;
+			return 1;
+		}
+		else 
+			return -1;
+	}
+	int setSpotCutoff(float spotCutoff){
+		if((spotCutoff >= 0 && spotCutoff <= 90) || spotCutoff == 180){
+			this->spotCutoff[0] = spotCutoff;
+			return 1;
+		}
+		else
+			return -1;
+	}
+	int setConstAttenuation(float constAttenuation){
+		if(constAttenuation>=1){
+			this->constAttenuation[0] = constAttenuation;
+			return 1;
+		}
+		else 
+			return -1;
+	}
+
+	int setLinAttenuation(float linAttenuation){
+		if(linAttenuation >= 0){
+			this->linAttenuation[0] = linAttenuation;
+			return 1;
+		}
+		else 
+			return -1;
+	}
+	int setQuadAttenuation(float quadAttenuation){
+		if(quadAttenuation >= 0){
+			this->quadAttenuation[0] = quadAttenuation;
+			return 1;
+		}
+		else 
+			return -1;
+	}
+	int getType(){return type;}
+	float getAmbR() {return ambR;} float getAmbG() {return ambG;} float getAmbB() {return ambB;}
+	float getDiffR(){return diffR;} float getDiffG(){return diffG;} float getDiffB(){return diffB;}
+	float getSpecR(){return specR;} float getSpecG(){return specG;} float getSpecB(){return specB;} 
+	float getPosOrDirX(){return posOrDirX;} float getPosOrDirY(){return posOrDirY;} float getPosOrDirZ(){return posOrDirZ;}
+	float getSpotDirX(){return spotDirX;} float getSpotDirY(){return spotDirY;} float getSpotDirZ(){return spotDirZ;}
+	float getSpotExponent(){return spotExponent[0];}
+	float getSpotCutoff(){return spotCutoff[0];}
+	float getConstAttenuation(){return constAttenuation[0];}
+	float getLinAttenuation(){return linAttenuation[0];}
+	float getQuadAttenuation(){return quadAttenuation[0];}
+
+	void setLight(int lightNr){
+		if(lightNr >= 0 && lightNr <= 8){
+			float posOrDir[4] = {posOrDirX, posOrDirY, posOrDirZ,1};
+			if(type == DIRECTIONAL)
+				posOrDir[0] = 0;
+			float amb[4] = {ambR,ambG,ambB,1};
+			float diff[4] = {diffR,diffG,diffB,1};
+			float spec[4] = {specR,specG,specB,1};
+			float spotDir[3] = {spotDirX,spotDirY,spotDirZ};
+
+			glLightfv(GL_LIGHT0+lightNr, GL_AMBIENT, amb);
+			glLightfv(GL_LIGHT0+lightNr, GL_DIFFUSE, diff);
+			glLightfv(GL_LIGHT0+lightNr, GL_SPECULAR, spec);
+			glLightfv(GL_LIGHT0+lightNr, GL_POSITION, posOrDir);
+			glLightfv(GL_LIGHT0+lightNr, GL_SPOT_DIRECTION, spotDir);
+			glLightfv(GL_LIGHT0+lightNr, GL_SPOT_EXPONENT, spotExponent);
+			glLightfv(GL_LIGHT0+lightNr, GL_SPOT_CUTOFF, spotCutoff);
+			glLightfv(GL_LIGHT0+lightNr, GL_CONSTANT_ATTENUATION,constAttenuation);
+			glLightfv(GL_LIGHT0+lightNr, GL_LINEAR_ATTENUATION,linAttenuation);
+			glLightfv(GL_LIGHT0+lightNr, GL_QUADRATIC_ATTENUATION,quadAttenuation);
+
+		}
+	}
+};
 
 class MaterialLightProperties
 {
@@ -410,7 +536,7 @@ public:
 			case TRANSLATE_TIME:{
 				float gt =glutGet(GLUT_ELAPSED_TIME) % (int)(time*1000);
 				float t = gt/(time*1000);
-				renderCatmullRomCurve();
+				//renderCatmullRomCurve();
 				getGlobalCatmullRomPoint(t,pos);
 				glTranslatef( pos[0],pos[1],pos[2]);
 				break;
@@ -467,7 +593,7 @@ public:
 
 };
 
-
+	vector<Light>lights;
 	vector<Group *> rootGroups;
 
 
@@ -737,8 +863,13 @@ public:
 
 	void registerLight(TiXmlElement * light){
 		double X=0,Y=0, Z=0;
+		double spotDirX = 0, spotDirY = 0, spotDirZ = 1, exponent = 0, cutoff=180;
 		const char * type = NULL;
+		double constAttenuation = 1;
+		double linAttenuation = 0;
+		double quadAttenuation = 0;
 
+		Light newLight;
 		type = light->Attribute("type");
 		light->Attribute("X",&X);
 		light->Attribute("Y",&Y);
@@ -746,21 +877,45 @@ public:
 
 		if(type != NULL){
 			if(!strcmp(type, "POINT")){
-				posOrDirOfLights.push_back(X);
-				posOrDirOfLights.push_back(Y);
-				posOrDirOfLights.push_back(Z);
-				posOrDirOfLights.push_back(1.0);
-
-				nrOfLights++;
+				newLight.setType(POINT);
 			}
 			else if(!strcmp(type, "DIRECTIONAL")){
-				posOrDirOfLights.push_back(X);
-				posOrDirOfLights.push_back(Y);
-				posOrDirOfLights.push_back(Z);
-				posOrDirOfLights.push_back(0.0);
-
-				nrOfLights++;
+				newLight.setType(DIRECTIONAL);
+				light->Attribute("constAttenuation",&constAttenuation);
+				light->Attribute("linAttenuation",&linAttenuation);
+				light->Attribute("quadAttenuation",&quadAttenuation);
+				newLight.setConstAttenuation(constAttenuation);
+				newLight.setLinAttenuation(linAttenuation);
+				newLight.setQuadAttenuation(quadAttenuation);
 			}
+			else if(!strcmp(type, "SPOT")){
+				newLight.setType(SPOT);
+				light->Attribute("constAttenuation",&constAttenuation);
+				light->Attribute("linAttenuation",&linAttenuation);
+				light->Attribute("quadAttenuation",&quadAttenuation);
+				newLight.setConstAttenuation(constAttenuation);
+				newLight.setLinAttenuation(linAttenuation);
+				newLight.setQuadAttenuation(quadAttenuation);
+
+				light->Attribute("dirX",&spotDirX);
+				light->Attribute("dirY",&spotDirY);
+				light->Attribute("dirZ",&spotDirZ);
+				newLight.setSpotDirX(spotDirX);
+				newLight.setSpotDirY(spotDirY);
+				newLight.setSpotDirZ(spotDirZ);
+
+				light->Attribute("exponent",&exponent);
+				newLight.setSpotExponent(exponent);
+
+				light->Attribute("cutoff",&cutoff);
+				newLight.setSpotCutoff(cutoff);
+
+			}
+			newLight.setPosOrDirX(X);
+			newLight.setPosOrDirX(Y);
+			newLight.setPosOrDirX(Z);
+
+			lights.push_back(newLight);
 		}
 
 
@@ -777,7 +932,7 @@ public:
 				TiXmlElement * lights = root->FirstChildElement("lights");
 				if(lights){
 					for(TiXmlElement * light = lights->FirstChildElement("light");
-						light != NULL && nrOfLights < 8;light = light -> NextSiblingElement("light")){
+						light != NULL;light = light -> NextSiblingElement("light")){
 						registerLight(light);
 					}
 				}
@@ -858,19 +1013,10 @@ public:
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 
-
-		for(i = 0; i < nrOfLights; i++){
-			posLight[0] = posOrDirOfLights.at(i*4+0);
-			posLight[1] = posOrDirOfLights.at(i*4+1);
-			posLight[2] = posOrDirOfLights.at(i*4+2);
-			posLight[3] = posOrDirOfLights.at(i*4+3);
-
-			//DEBUG
-			//printf("lightID: %d\n\tposition: %f,%f,%f,%f\n",GL_LIGHT0+i,posOrDirOfLights.at(i*4+0),posOrDirOfLights.at(i*4+1),posOrDirOfLights.at(i*4+2),posOrDirOfLights.at(i*4+3));
-
-			glLightfv(GL_LIGHT0+i, GL_POSITION, posLight);
-			glLightfv(GL_LIGHT0+i, GL_AMBIENT, ambLight);
-			glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffLight);
+		vector<Light>::iterator lightIt;
+		int lightNr;
+		for(lightNr = 0,lightIt = lights.begin();lightIt != lights.end(); lightIt++, lightNr++){
+			lightIt->setLight(lightNr);
 		}
 		glColor3f(1.0, 1.0, 0.5);
 		vector<Group *>::iterator rootGroupsIt;
@@ -899,10 +1045,10 @@ public:
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glGenBuffers(3, buffers);
 
-		if(nrOfLights > 0)
+		if(lights.size() > 0)
 			glEnable(GL_LIGHTING);
 
-		for(int i = 0; i < nrOfLights; i++){
+		for(int i = 0; i < lights.size(); i++){
 			glEnable(GL_LIGHT0+i);
 		}
 	}
@@ -934,8 +1080,10 @@ public:
 		//Load all elements from xml file
 		loadXML(argv[1]);
 
-		for(int i = 0; i < nrOfLights; i++){
-			printf("Light %d: (%f,%f,%f,%f)\n",i,posOrDirOfLights.at(i*4+0),posOrDirOfLights.at(i*4+1),posOrDirOfLights.at(i*4+2),posOrDirOfLights.at(i*4+3));
+		vector<Light>::iterator lightIt;
+		int i;
+		for(i = 0, lightIt = lights.begin();lightIt != lights.end(); lightIt++,i++){
+			printf("Light %d: \n\ttype:%d\tposOrDir(%f,%f,%f)\n",i,lightIt->getType(),lightIt->getPosOrDirX(),lightIt->getPosOrDirY(),lightIt->getPosOrDirZ());
 		}
 
 		//Initialize OpenGL
