@@ -182,7 +182,6 @@
 			</group>
 			<group>
 				<scale X=45 Y=45 Z=45 />
-				<rotate angle=15 axisX=1 axisY=0 axisZ=0 />
 				<models>
 					<model file="disc.3d" ambR=0.8/>
 				</models>
