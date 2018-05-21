@@ -1,0 +1,10 @@
+<scene>
+	<lights>
+    <light type = "POINT" X=50 Y=50 Z=50 />
+  </lights>
+  <group>
+    <models>
+      <model file="sphere.3d" texture="earthmap1k.jpg" slices=50 stacks=50 type="sphere" />
+    </models>
+  </group>
+</scene>
