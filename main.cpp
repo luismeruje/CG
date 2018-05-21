@@ -250,7 +250,7 @@ public:
 		if(lightNr >= 0 && lightNr <= 8){
 			float posOrDir[4] = {posOrDirX, posOrDirY, posOrDirZ,1};
 			if(type == DIRECTIONAL)
-				posOrDir[0] = 0;
+				posOrDir[3] = 0;
 			float amb[4] = {ambR,ambG,ambB,1};
 			float diff[4] = {diffR,diffG,diffB,1};
 			float spec[4] = {specR,specG,specB,1};
@@ -912,8 +912,8 @@ public:
 
 			}
 			newLight.setPosOrDirX(X);
-			newLight.setPosOrDirX(Y);
-			newLight.setPosOrDirX(Z);
+			newLight.setPosOrDirY(Y);
+			newLight.setPosOrDirZ(Z);
 
 			lights.push_back(newLight);
 		}
