@@ -1,0 +1,112 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/main.cpp
+stdio.h
+-
+stdlib.h
+-
+GLUT/glut.h
+-
+/usr/local/Cellar/devil/1.8.0_1/include/IL/il.h
+-
+GL/glew.h
+-
+GL/glut.h
+-
+IL/il.h
+-
+tr1/memory
+-
+math.h
+-
+fstream
+-
+tinyXml/tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxml.h
+tinyXml/tinystr.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinystr.h
+tinyXml/tinyxmlparser.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxmlparser.cpp
+tinyXml/tinystr.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinystr.cpp
+tinyXml/tinyxml.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxml.cpp
+tinyXml/tinyxmlerror.cpp
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxmlerror.cpp
+string
+-
+vector
+-
+iostream
+-
+limits
+-
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinystr.cpp
+tinystr.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinystr.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinystr.h
+assert.h
+-
+string.h
+-
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxml.cpp
+ctype.h
+-
+sstream
+-
+iostream
+-
+tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxml.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxml.h
+ctype.h
+-
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+assert.h
+-
+string
+-
+iostream
+-
+sstream
+-
+tinystr.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinystr.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxmlerror.cpp
+tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxml.h
+
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxmlparser.cpp
+ctype.h
+-
+stddef.h
+-
+tinyxml.h
+/Users/LuisFerreira/Documents/Universidade/3º ano/CG/CG/tinyXml/tinyxml.h
+windows.h
+-
+
+/usr/local/Cellar/devil/1.8.0_1/include/IL/il.h
+stdio.h
+-
+limits.h
+-
+wchar.h
+-
+

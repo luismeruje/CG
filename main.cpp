@@ -523,6 +523,8 @@ public:
 
 
 	void apply(){
+		float gt;
+		float t;
 		switch(type){
 			case ROTATE:
 				glRotatef(angle,x,y,z);
@@ -533,16 +535,14 @@ public:
 			case SCALE:
 				glScalef(x,y,z);
 				break;
-			case TRANSLATE_TIME:{
-				float gt =glutGet(GLUT_ELAPSED_TIME) % (int)(time*1000);
-				float t = gt/(time*1000);
+			case TRANSLATE_TIME:
+				gt =glutGet(GLUT_ELAPSED_TIME) % (int)(time*1000);
+				t = gt/(time*1000);
 				//renderCatmullRomCurve();
 				getGlobalCatmullRomPoint(t,pos);
 				glTranslatef( pos[0],pos[1],pos[2]);
 				break;
-			}
 			case ROTATE_TIME:
-
 				float timeNow = glutGet(GLUT_ELAPSED_TIME);
 				angle = timeNow * ((360) / (time * 1000));
 				glRotatef(angle,x,y,z);
